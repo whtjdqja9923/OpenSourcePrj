@@ -3,3 +3,4 @@
 
 #의존성 관리
 flask
+flask_cors

@@ -1,6 +1,13 @@
 from flask import Flask
+from flask_cors import CORS
 
-app = Flask(__name__)
+def create_app():
+    app = Flask(__name__)
+    CORS(app)
+
+    return app
+
+app = create_app()
 
 @app.route("/")
 def index():
