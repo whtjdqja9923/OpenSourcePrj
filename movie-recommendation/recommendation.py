@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template
 from . import movie_util
 
-movies_bp = Blueprint('movies_bp', __name__, template_folder="templates")
+movies_bp = Blueprint('movies_bp', __name__, url_prefix='/', template_folder="templates")
 
 
 # 추천 영화목록 출력
