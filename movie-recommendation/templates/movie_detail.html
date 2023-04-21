@@ -1,17 +1,28 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ movie_title }}</title>
+    <div class="navbar">
+        <nav>
+            <ul>
+                <li>
+                    <a href="/home">
+                        <img src="./img/home.png" alt="Home">
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
 </head>
 <body>
-    <div style="font-size: 24pt">
-        {{ movie_title }}
-    </div>
-    <div style="font-size: 10pt">
-        {{ movie_rating }}
+    <div>
+        <p class="movie_title">영화제목</p>
+        <p class="actors">배우1 배우2 배우3</p>
+        <p class="movie_recommendation_list_sub">movie1 movie2 movie3</p>
     </div>
 </body>
 </html>

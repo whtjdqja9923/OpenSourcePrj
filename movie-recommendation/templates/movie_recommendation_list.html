@@ -1,19 +1,30 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
+    <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>추천영화목록</title>
+    <div class="navbar">
+        <nav>
+            <ul>
+                <li>
+                    <a href="/home">
+                        <img src="./img/home.png" alt="Home">
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
 </head>
 <body>
     <div>
-        <h>추천영화목록</h>
-        <ul>
-            {% for movie_title in list %}
-            <li>{{ movie_title }}</li>
-            {% endfor %}
-        </ul>
+        <p class="movie_recommendation_list">
+            movie1<br />
+            movie2<br />
+            movie3
+        </p>
     </div>
 </body>
 </html>
