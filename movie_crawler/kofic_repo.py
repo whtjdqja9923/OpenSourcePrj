@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from datetime import date
 
 #데이터 예시
 #{"movieCd":"20211567","movieNm":"수프와 이데올로기","movieNmEn":"Soup and Ideology",
@@ -10,24 +9,24 @@ from datetime import date
 # {"companyCd":"20229504","companyNm":"㈜나비온에어"}]}
 
 @dataclass
-class movie_list:
-    movieCd: str
-    movieNm: str
-    movieNmEn: str
-    prdtYear: date
-    openDt: date
-    typeNm: str
-    prdtStatNm: str
-    repNationNm: str
-    repGenreNm: str
-    directors: list[directors()] = field(default_factory=list)
-    companys: list[companys()] = field(default_factory=list)
-
-@dataclass
 class directors:
-    peopleNm: str
+    people_name: str = ''
 
 @dataclass
 class companys:
-    companyCd: str
-    companyNm: str
+    company_code: str = ''
+    company_name: str = ''
+
+@dataclass
+class movie_data:
+    movie_code: str = ''
+    movie_name: str = ''
+    movie_name_eng: str = ''
+    prdt_year: str = ''
+    open_date: str = ''
+    type_name: str = ''
+    prdt_stat_name: str = ''
+    rep_nation_name: str = ''
+    rep_genre_name: str = ''
+    directors: list[directors] = field(default_factory=list)
+    companys: list[companys] = field(default_factory=list)
