@@ -38,3 +38,31 @@ class kofic_crawler:
 
             sys.stdout.close()
             sleep(0.5) # 과부하 방지
+
+    def searchPeopleList_crawl(self, START_PAGE, END_PAGE):
+        for i in range (START_PAGE, END_PAGE+1):
+            curPage = i
+            curPage = str(curPage)
+
+            #일단 파일로 기록하고 추후에 DB에 등록하도록 변경
+            sys.stdout = open("./moviecrawler/result/kofic_searchPeopleList_" \
+                              + self.itemPerPage + "_" + curPage + ".json", "w", encoding="utf-8")
+
+            webpage = ''
+            ext = 0
+            while(webpage == ''):
+                try:
+                    ext = ext + 1
+                    if ext == 30: #최대 시도 횟수
+                        break
+                    webpage = requests.get(kofic_api_url['searchPeopleList'] + "key=" + api_key + \
+                                           "&" + "itemPerPage=" + self.itemPerPage + \
+                                            "&" + "curPage=" + curPage)
+                except:
+                    sleep(5)
+
+            soup = BeautifulSoup(webpage.content, "html.parser")
+            print(soup)
+
+            sys.stdout.close()
+            sleep(0.5) # 과부하 방지
