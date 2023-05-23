@@ -153,3 +153,37 @@ def save_movie_list(data:movie_data):
     con.commit()
     cursor.close()
     con.close()
+
+def save_people_list(data:people_data):
+    con = sqlite3.connect(db_path + db_name)
+    cursor = con.cursor()
+    
+    insert_people_basic = '''
+        INSERT INTO people_basic ( 
+            "people code", "people name", "people name eng", "rep role name" ) 
+            VALUES ( ?, ?, ?, ? )
+    '''
+    people_data = [data.people_code, data.poeple_name, data.people_name_eng, data.rep_role_name]
+
+    try:
+        cursor.execute(insert_people_basic, people_data)
+    except:
+        pass
+    
+    for filmo_name in data.filmo_names:
+        insert_filmo_names = '''
+            INSERT INTO people_filmo ( 
+                "people code", "filmo name" ) 
+                VALUES ( ?, ? )
+        '''
+
+        filmo_data = [data.people_code, filmo_name]
+
+        try:
+            cursor.execute(insert_filmo_names, filmo_data)
+        except:
+            pass
+
+    con.commit()
+    cursor.close()
+    con.close()
