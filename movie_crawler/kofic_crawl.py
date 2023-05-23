@@ -3,7 +3,7 @@ from time import sleep
 import requests
 from bs4 import BeautifulSoup
 import json
-from kofic_repo import movie_data, directors, companys
+from kofic_repo import movie_data, directors, companys, people_data
 import datetime
 from datetime import datetime
 
@@ -62,33 +62,34 @@ class kofic_crawler:
 
             sleep(0.5) # 과부하 방지
 
-    # def searchPeopleList_crawl(self, START_PAGE, END_PAGE):
-    #     for i in range (START_PAGE, END_PAGE+1):
-    #         curPage = i
-    #         curPage = str(curPage)
+    def searchPeopleList_crawl(self, START_PAGE, END_PAGE):
+        for i in range (START_PAGE, END_PAGE+1):
+            curPage = i
+            curPage = str(curPage)
+            data = people_data()
 
-    #         #일단 파일로 기록하고 추후에 DB에 등록하도록 변경
-    #         sys.stdout = open("./moviecrawler/result/kofic_searchPeopleList_" \
-    #                           + self.itemPerPage + "_" + curPage + ".json", "w", encoding="utf-8")
+            webpage = ''
+            ext = 0
+            while(webpage == ''):
+                try:
+                    ext = ext + 1
+                    if ext == 30: #최대 시도 횟수
+                        break
+                    webpage = requests.get(kofic_api_url['searchPeopleList'] + "key=" + api_key + \
+                                           "&" + "itemPerPage=" + self.itemPerPage + \
+                                            "&" + "curPage=" + curPage)
+                except:
+                    sleep(5)
 
-    #         webpage = ''
-    #         ext = 0
-    #         while(webpage == ''):
-    #             try:
-    #                 ext = ext + 1
-    #                 if ext == 30: #최대 시도 횟수
-    #                     break
-    #                 webpage = requests.get(kofic_api_url['searchPeopleList'] + "key=" + api_key + \
-    #                                        "&" + "itemPerPage=" + self.itemPerPage + \
-    #                                         "&" + "curPage=" + curPage)
-    #             except:
-    #                 sleep(5)
+            soup = BeautifulSoup(webpage.content, "html.parser")
+            crawl_result = json.loads(soup.string)
+            people_list = crawl_result.get('peopleListResult').get('peopleList')
 
-    #         soup = BeautifulSoup(webpage.content, "html.parser")
-    #         print(soup)
+            for people in people_list:
+                data.people_code = people.get('peopleCd')
+                data.poeple_name = people.get('peopleNm')
+                data.people_name_eng = people.get('peopleNmEn')
+                data.rep_role_name = people.get('repRoleNm')
+                data.filmo_names = people.get('filmoNames')
 
-    #         sys.stdout.close()
-    #         sleep(0.5) # 과부하 방지
-
-a = kofic_crawler()
-a.searchMovieList_crawl(1, 2)
+            sleep(0.5) # 과부하 방지

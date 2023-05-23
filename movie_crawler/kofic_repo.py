@@ -30,3 +30,16 @@ class movie_data:
     rep_genre_name: str = ''
     directors: list[directors] = field(default_factory=list)
     companys: list[companys] = field(default_factory=list)
+
+#데이터 예시
+# {"peopleCd":"20389164","peopleNm":"리아드 벨라이체",
+# "peopleNmEn":"Riadh Belaiche","repRoleNm":"배우","filmoNames":""}
+
+@dataclass
+class people_data:
+    people_code: str = ''
+    poeple_name: str = ''
+    people_name_eng: str = ''
+    rep_role_name: str = ''
+    filmo_names: str = ''
+
