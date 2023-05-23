@@ -105,7 +105,7 @@ def create_table_movie():
     cursor.close()
     con.close()
 
-def save_movie_list(data:movie_data):
+def save_movie_list(data_list:list[movie_data]):
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
 
@@ -116,45 +116,41 @@ def save_movie_list(data:movie_data):
             "rep genre name" ) 
             VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )
     '''
-    movie_data = [data.movie_code, data.movie_name, data.movie_name_eng, 
-                   data.prdt_year, data.open_date, data.type_name, 
-                   data.prdt_stat_name, data.rep_nation_name, data.rep_genre_name]
-    try:
-        cursor.execute(insert_movie_basic, movie_data)
-    except:
-        pass
-
-    for company in data.companys:
-        insert_companys = '''
+    insert_companys = '''
             INSERT INTO companys ( 
                 "movie code", "company code", "company name" ) 
                 VALUES ( ?, ?, ? )
-        '''
-        company_data = [data.movie_code, company.company_code, company.company_name]
-
-        try:
-            cursor.execute(insert_companys, company_data)
-        except:
-            pass
-
-    for director in data.directors:
-        insert_companys = '''
+    '''
+    insert_directors = '''
             INSERT INTO directors (
                 "movie code", "people name" )
                 VALUES ( ?, ? )
-        '''
-        director_data = [data.movie_code, director.people_name]
+    '''
 
-        try:
-            cursor.execute(insert_companys, director_data)
-        except:
-            pass
+    movie_data = []
+    company_data = []
+    director_data = []
+    for data in data_list:
+        movie_data.append([data.movie_code, data.movie_name, data.movie_name_eng, 
+                            data.prdt_year, data.open_date, data.type_name, 
+                            data.prdt_stat_name, data.rep_nation_name, data.rep_genre_name])
+        
+        for company in data.companys:
+            company_data.append([data.movie_code, company.company_code, company.company_name])
+
+        for director in data.directors:
+            director_data.append([data.movie_code, director.people_name])
+
+    
+    cursor.executemany(insert_movie_basic, movie_data)
+    cursor.executemany(insert_companys, company_data)
+    cursor.executemany(insert_directors, director_data)
         
     con.commit()
     cursor.close()
     con.close()
 
-def save_people_list(data:people_data):
+def save_people_list(data_list:list[people_data]):
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
     
@@ -163,26 +159,21 @@ def save_people_list(data:people_data):
             "people code", "people name", "people name eng", "rep role name" ) 
             VALUES ( ?, ?, ?, ? )
     '''
-    people_data = [data.people_code, data.poeple_name, data.people_name_eng, data.rep_role_name]
+    insert_filmo_names = '''
+        INSERT INTO people_filmo ( 
+            "people code", "filmo name" ) 
+            VALUES ( ?, ? )
+    '''
+    people_data = []
+    filmo_data = []
+    for data in data_list:
+        people_data.append([data.people_code, data.poeple_name, data.people_name_eng, data.rep_role_name])
 
-    try:
-        cursor.execute(insert_people_basic, people_data)
-    except:
-        pass
-    
-    for filmo_name in data.filmo_names:
-        insert_filmo_names = '''
-            INSERT INTO people_filmo ( 
-                "people code", "filmo name" ) 
-                VALUES ( ?, ? )
-        '''
+        for filmo_name in data.filmo_names:
+            filmo_data.append([data.people_code, filmo_name])
 
-        filmo_data = [data.people_code, filmo_name]
-
-        try:
-            cursor.execute(insert_filmo_names, filmo_data)
-        except:
-            pass
+    cursor.executemany(insert_people_basic, people_data)
+    cursor.executemany(insert_filmo_names, filmo_data)
 
     con.commit()
     cursor.close()
