@@ -104,3 +104,52 @@ def create_table_movie():
 
     cursor.close()
     con.close()
+
+def save_movie_list(data:movie_data):
+    con = sqlite3.connect(db_path + db_name)
+    cursor = con.cursor()
+
+    insert_movie_basic = '''
+        INSERT INTO movie_basic ( 
+            "movie code", "movie name", "movie name eng", "prdt year", 
+            "open date", "type name", "prdt stat name", "rep nation name", 
+            "rep genre name" ) 
+            VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ? )
+    '''
+    movie_data = [data.movie_code, data.movie_name, data.movie_name_eng, 
+                   data.prdt_year, data.open_date, data.type_name, 
+                   data.prdt_stat_name, data.rep_nation_name, data.rep_genre_name]
+    try:
+        cursor.execute(insert_movie_basic, movie_data)
+    except:
+        pass
+
+    for company in data.companys:
+        insert_companys = '''
+            INSERT INTO companys ( 
+                "movie code", "company code", "company name" ) 
+                VALUES ( ?, ?, ? )
+        '''
+        company_data = [data.movie_code, company.company_code, company.company_name]
+
+        try:
+            cursor.execute(insert_companys, company_data)
+        except:
+            pass
+
+    for director in data.directors:
+        insert_companys = '''
+            INSERT INTO directors (
+                "movie code", "people name" )
+                VALUES ( ?, ? )
+        '''
+        director_data = [data.movie_code, director.people_name]
+
+        try:
+            cursor.execute(insert_companys, director_data)
+        except:
+            pass
+        
+    con.commit()
+    cursor.close()
+    con.close()
