@@ -34,6 +34,9 @@ class movie_data:
     rep_genre_name: str = ''
     directors: list[directors] = field(default_factory=list)
     companys: list[companys] = field(default_factory=list)
+    movie_code: str = ''
+    movie_name_org: str = ''
+    show_time: str = ''
 
 #데이터 예시
 # {"peopleCd":"20389164","peopleNm":"리아드 벨라이체",
@@ -46,6 +49,7 @@ class people_data:
     people_name_eng: str = ''
     rep_role_name: str = ''
     filmo_names: list[str] = field(default_factory=list)
+    filmo_comapct: str = ''
 
 #테이블 조회 후 없으면 필요테이블 생성
 def create_table_movie():
@@ -68,25 +72,32 @@ def create_table_movie():
         "company code"       VARCHAR(255) NOT NULL    ,
         "company name"       VARCHAR(255)     ,
         CONSTRAINT pk2 PRIMARY KEY ( "movie code", "company code" ),
-        FOREIGN KEY ( "movie code" ) REFERENCES movie_basic( "movie code" )  
+        FOREIGN KEY ( "movie code" ) REFERENCES movie_basic( "movie code" ) ON DELETE CASCADE 
         ); '''
     ddl_directors = ''' CREATE TABLE directors ( 
         "director num"       INTEGER NOT NULL  PRIMARY KEY  ,
         "movie code"         VARCHAR(255) NOT NULL    ,
         "people name"        VARCHAR(255)     ,
-        FOREIGN KEY ( "movie code" ) REFERENCES movie_basic( "movie code" )  
+        FOREIGN KEY ( "movie code" ) REFERENCES movie_basic( "movie code" ) ON DELETE CASCADE 
         ); '''
     ddl_people_basic = ''' CREATE TABLE people_basic ( 
-        "people code"        VARCHAR(255) NOT NULL  PRIMARY KEY  ,
-        "people name"        VARCHAR(255) NOT NULL    ,
-        "people name eng"    VARCHAR(255)     ,
-        "rep role name"      VARCHAR(255) NOT NULL  
+	    "people code"        VARCHAR(255) NOT NULL  PRIMARY KEY  ,
+	    "people name"        VARCHAR(255) NOT NULL    ,
+	    "people name eng"    VARCHAR(255)     ,
+	    "rep role name"      VARCHAR(255)     ,
+	    "filmo compact"      VARCHAR(1000)     
         ); '''
     ddl_people_filmo = ''' CREATE TABLE people_filmo ( 
         "filmo num"          INTEGER NOT NULL  PRIMARY KEY  ,
         "people code"        VARCHAR(255) NOT NULL    ,
         "filmo name"         VARCHAR(255) NOT NULL    ,
-        FOREIGN KEY ( "people code" ) REFERENCES people_basic( "people code" )  
+        FOREIGN KEY ( "people code" ) REFERENCES people_basic( "people code" ) ON DELETE CASCADE 
+        ); '''
+    ddl_movie_detail = ''' CREATE TABLE movie_detail ( 
+        "movie code"         VARCHAR(255) NOT NULL  PRIMARY KEY  ,
+        "movie name org"            VARCHAR(255)     ,
+        "show time"               VARCHAR(255) NOT NULL    ,
+        FOREIGN KEY ( "movie code" ) REFERENCES movie_basic( "movie code" ) ON DELETE CASCADE 
         ); '''
         
     if not cursor.execute('''select name from sqlite_master where type="table" and name="movie_basic"''').fetchall():
@@ -99,6 +110,8 @@ def create_table_movie():
         cursor.execute(ddl_people_basic)
     if not cursor.execute('''select name from sqlite_master where type="table" and name="people_filmo"''').fetchall():
         cursor.execute(ddl_people_filmo)
+    if not cursor.execute('''select name from sqlite_master where type="table" and name="movie_detail"''').fetchall():
+        cursor.execute(ddl_movie_detail)
 
     con.commit()
 
@@ -156,8 +169,8 @@ def save_people_list(data_list:list[people_data]):
     
     insert_people_basic = '''
         INSERT INTO people_basic ( 
-            "people code", "people name", "people name eng", "rep role name" ) 
-            VALUES ( ?, ?, ?, ? )
+            "people code", "people name", "people name eng", "rep role name", "filmo compact" ) 
+            VALUES ( ?, ?, ?, ?, ? )
     '''
     insert_filmo_names = '''
         INSERT INTO people_filmo ( 
@@ -167,7 +180,7 @@ def save_people_list(data_list:list[people_data]):
     people_data = []
     filmo_data = []
     for data in data_list:
-        people_data.append([data.people_code, data.poeple_name, data.people_name_eng, data.rep_role_name])
+        people_data.append([data.people_code, data.poeple_name, data.people_name_eng, data.rep_role_name, data.filmo_comapct])
 
         for filmo_name in data.filmo_names:
             filmo_data.append([data.people_code, filmo_name])
@@ -178,3 +191,146 @@ def save_people_list(data_list:list[people_data]):
     con.commit()
     cursor.close()
     con.close()
+
+def save_movie_detail(data:movie_data):
+    con = sqlite3.connect(db_path + db_name)
+    cursor = con.cursor()
+    
+    insert_movie_detail = '''
+        INSERT INTO movie_detail ( 
+            "movie code", "movie name org", "show time" ) 
+            VALUES ( ?, ?, ? )
+    '''
+
+    movie_data = [data.movie_code, data.movie_name_org, data.show_time]
+
+    cursor.execute(insert_movie_detail, movie_data)
+
+    con.commit()
+    cursor.close()
+    con.close()
+
+#영화 검색
+def get_movie(all=False, movie_code = "", movie_name = "", movie_name_eng = "", prdt_year = "", 
+              open_date = "", type_name = "", prdt_stat_name = "", rep_nation_name = "", rep_genre_name = "", movie_name_org = "")->list:
+    
+    con = sqlite3.connect(db_path + db_name)
+    con.row_factory = sqlite3.Row
+    cursor = con.cursor()
+
+    query_before = ''' SELECT mb."movie code" as movie_code, mb."movie name" as movie_name, mb."movie name eng" as movie_name_eng, 
+        mb."prdt year" as prdt_year, mb."open date" as open_date, mb."type name" as type_name, mb."prdt stat name" as prdt_stat_name, mb."rep nation name" as rep_nation_name, 
+        mb."rep genre name" as rep_genre_name, md."movie name org" as movie_name_org, md."show time" as show_time
+        FROM movie_basic mb 
+	    LEFT OUTER JOIN movie_detail md ON ( md."movie code" = mb."movie code"  )
+    '''
+
+    if all == True:
+        where += ";"
+    else:
+        #where절 생성을 위해 입력받은 변수 확인
+        where = "WHERE "
+        if movie_code != "":
+            where += 'mb."movie code" LIKE "%' + movie_code + '%" AND '
+        if movie_name != "":
+            where += 'mb."movie name" LIKE "%' + movie_name + '%" AND '
+        if movie_name_eng != "":
+            where += 'mb."movie name eng" LIKE "%' + movie_name_eng + '%" AND '
+        if prdt_year != "":
+            where += 'mb."prdt year" = "' + prdt_year + '" AND '
+        if open_date != "":
+            where += 'mb."open date" = "' + open_date + '" AND '
+        if type_name != "":
+            where += 'mb."type name" LIKE "%' + type_name + '%" AND '
+        if prdt_stat_name != "":
+            where += 'mb."prdt stat name" = "' + prdt_stat_name + '" AND '
+        if rep_nation_name != "":
+            where += 'mb."rep nation name" = "' + rep_nation_name + '" AND '
+        if rep_genre_name != "":
+            where += 'mb."rep genre name" LIKE "%' + rep_genre_name + '%" AND '    
+        if movie_name_org != "":
+            where += 'md."movie name org" LIKE "%' + movie_name_org + '%" AND '    
+        #끝에 AND 제거
+        if where != "":
+            where = where[:-5]
+            where += ";"
+
+    result = []
+    for row in cursor.execute(query_before + where).fetchall():
+        result.append(dict(row))
+
+    cursor.close()
+    con.close()
+
+    return result
+
+def get_people(all=False, people_code="", people_name="", people_name_eng="", rep_role_name="", filmo_compact=""):
+    con = sqlite3.connect(db_path + db_name)
+    con.row_factory = sqlite3.Row
+    cursor = con.cursor()
+
+    query_before = ''' SELECT pb."people code" as people_code, pb."people name" as people_name, pb."people name eng" as people_name_eng, pb."filmo compact" as filmo_compact
+    pb."rep role name" as rep_role_name
+        FROM people_basic pb 
+    '''
+
+    if all == True:
+        where += ";"
+    else:
+        #where절 생성을 위해 입력받은 변수 확인
+        where = "WHERE "
+        if people_code != "":
+            where += 'pb."people code" LIKE "%' + people_code + '%" AND '
+        if people_name != "":
+            where += 'pb."people name" LIKE "%' + people_name + '%" AND '
+        if people_name_eng != "":
+            where += 'pb."people name eng" LIKE "%' + people_name_eng + '%" AND '
+        if rep_role_name != "":
+            where += 'pb."rep role name" LIKE "%' + rep_role_name + '%" AND '
+        if filmo_compact != "":
+            where += 'pb."filmo compact" LIKE "%' + filmo_compact + '%" AND '
+        #끝에 AND 제거
+        if where != "":
+            where = where[:-5]
+            where += ";"
+
+    result = []
+    for row in cursor.execute(query_before + where).fetchall():
+        result.append(dict(row))
+
+    cursor.close()
+    con.close()
+
+    return result
+
+def get_filmo(all=False, people_code="", filmo_name=""):
+    con = sqlite3.connect(db_path + db_name)
+    con.row_factory = sqlite3.Row
+    cursor = con.cursor()
+
+    query_before = ''' SELECT pf."people code" as people_code, pf."filmo name" as filmo_name, pb."people name" as people_name, pb."people name eng" as people_name_eng, pb."rep role name" as rep_role_name
+    FROM people_filmo pf 
+	RIGHT OUTER JOIN people_basic pb ON ( pb."people code" = pf."people code"  )  
+    '''
+
+    if all == True:
+        where += ";"
+    else:
+        #where절 생성을 위해 입력받은 변수 확인
+        where = "WHERE "
+        if people_code != "":
+            where += 'pf."people code" LIKE "%' + people_code + '%" AND '
+        if filmo_name != "":
+            where += 'pf."filmo name" LIKE "%' + filmo_name + '%" AND '
+        if where != "":
+            where = where[:-5]
+            where += ";"
+
+    result = []
+    for row in cursor.execute(query_before + where).fetchall():
+        result.append(dict(row))
+
+    cursor.close()
+    con.close()
+
+    return result
