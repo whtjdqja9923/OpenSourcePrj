@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, redirect
 from flask_wtf import FlaskForm
-from moviehome.forms import signin_form, signup_form
+from moviehome.forms import signin_form, signup_form, memberupdate_form
 
+from moviehome.service import register, login, myinfo, update_member_info
 from moviehome.repo import member
 
 # 블루프린트 생성
@@ -36,18 +37,25 @@ def signup():
 
     return render_template('register.html', form=form)
 
-#회원가입 정보를 입력받아 가입처리
-@mh.route('/signup/register', methods = ['POST'])
-def signup_request():
-    return "회원가입 처리로직 및 결과반환 후 완료 시 로그인페이지로 이동"
-
 #로그인 페이지(폼)
-@mh.route('/signin')
+@mh.route('/signin', methods = ['GET', 'POST'])
 def signin():
-    return "로그인 페이지"
+    if('member_id' in session):
+        return redirect('/')
 
-#로그인 정보를 입력받아 로그인 처리
-@mh.route('/signin/login', methods = ['POST'])
-def signin_request():
-    return "로그인 처리 및 완료 시 메인페이지로 redirect"
+    form = signin_form()
+
+    if form.validate_on_submit():
+        m = member()
+        m.member_id = form.data.get('member_id')
+        m.password = form.data.get('password')
+
+        result = login(m)
+        if(result['flag']):
+            session['member_id'] = m.member_id
+            return redirect('/')
+        else:
+            return render_template('login.html', form=form, error_msg=result['msg'])
+
+    return render_template('login.html', form=form)
 
