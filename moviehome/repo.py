@@ -21,7 +21,7 @@ def create_table_movie():
 
     ddl_member = ''' CREATE TABLE member ( 
         "member code"        INTEGER NOT NULL  PRIMARY KEY  ,
-        "member id"          VARCHAR(255) NOT NULL    ,
+        "member id"          VARCHAR(255) NOT NULL  UNIQUE  ,
         password             VARCHAR(255) NOT NULL    ,
         gender               VARCHAR(255)     ,
         email                VARCHAR(255)     ,
@@ -65,7 +65,7 @@ def save_member(m:member):
     cursor.close()
     con.close()
 
-    return ""
+    return
 
 def get_member(m:member, all=False):
     con = sqlite3.connect(path.db_path + path.db_name)
@@ -90,6 +90,24 @@ def get_member(m:member, all=False):
         result.append(member(row[0], row[1], row[2], row[3], row[4], row[5]))
 
     return result
+
+def update_member(m:member):
+    con = sqlite3.connect(path.db_path + path.db_name)
+    cursor = con.cursor()
+
+    query_before = ''' UPDATE member set password = ?, gender = ?, email = ?, age = ? WHERE "member id" = ?;
+    '''
+
+    data = [m.password, m.gender, m.email, m.age, m.member_id]
+
+    cursor.execute(query_before, data)
+    
+    con.commit()
+
+    cursor.close()
+    con.close()
+
+    return
 
 def save_favorite(m:member):
     return ""
