@@ -26,3 +26,24 @@ def register(m:member, password_confirm):
         save_member(m)
 
     return result
+
+#member id를 활용해 member 정보 조회
+def myinfo(m:member):
+    result = get_member(m)
+
+    if (not result) or (len(result) > 1):
+        return "" # 공백 반환
+
+    return result[0]
+
+def update_member_info(m:member):
+    result = {"flag":False, "msg":"변경에 실패하였습니다"}
+    
+    try:
+        update_member(m)
+        result["flag"] = True
+        result["msg"] = "변경성공!"
+    except:
+        return result
+
+    return result
