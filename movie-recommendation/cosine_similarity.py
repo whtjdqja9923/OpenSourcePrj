@@ -6,6 +6,7 @@ db_path = "./share/"
 db_name = "movie_data.db"
 similarity_matrix_file = "similarity_matrix.npy"
 
+
 def get_movie_data():
     con = sqlite3.connect(db_path + db_name)
     con.row_factory = sqlite3.Row
@@ -32,6 +33,10 @@ def calculate_cosine_similarity(movie_data):
 
     for i in range(num_movies):
         for j in range(num_movies):
+            if i == j:
+                similarity_matrix[i][j] = 0
+                continue
+
             # i번째와 j번째 영화 데이터 가져오기
             movie1 = movie_data[i]
             movie2 = movie_data[j]
