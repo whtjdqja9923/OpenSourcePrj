@@ -102,3 +102,17 @@ def member_info():
         update_member_info(m)
     
     return render_template('mypage_info.html', member = m, form=form, member_id = session['member_id'])
+
+@mh.route('/member/myMovie', methods = ['GET'])
+def member_my_movie():
+    if(not 'member_id' in session):
+        return redirect('/')
+    
+    return render_template('mypage_movie.html', member_id = session['member_id'])
+
+@mh.route('/member/myFavorite', methods = ['GET'])
+def member_my_favorite():
+    if(not 'member_id' in session):
+        return redirect('/')
+    
+    return render_template('mypage_favorite.html', member_id = session['member_id'])
