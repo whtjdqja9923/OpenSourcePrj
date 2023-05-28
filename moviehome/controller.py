@@ -72,3 +72,33 @@ def logout():
     session.clear()
     return redirect('/')
 
+#나의정보
+@mh.route('/member', methods = ['GET'])
+def mypage():
+    if(not 'member_id' in session):
+        return redirect('/')
+    
+    return redirect('/member/info')
+
+@mh.route('/member/info', methods = ['GET', 'POST'])
+def member_info():
+    if(not 'member_id' in session):
+        return redirect('/')
+    
+    m = member()
+    m.member_id = session['member_id']
+    m = myinfo(m)
+    if(not m):
+        return redirect("/")
+    
+    form = memberupdate_form(gender=m.gender, email=m.email, age=m.age)
+    
+    if form.validate_on_submit():
+        m.password = form.data.get('password')
+        m.gender = form.data.get('gender')
+        m.email = form.data.get('email')
+        m.age = form.data.get('age')
+
+        update_member_info(m)
+    
+    return render_template('mypage_info.html', member = m, form=form, member_id = session['member_id'])
