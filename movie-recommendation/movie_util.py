@@ -6,51 +6,74 @@ db_name = "movie_data.db"
 
 similarity_matrix = np.load('similarity_matrix.npy')
 
-def get_top_similarity_indices(similarity_row):
-    length = len(similarity_row)
-    
-    # 유사도 행의 인덱스와 값들을 묶어서 리스트로 생성
-    similarity_indices = list(enumerate(similarity_row))
-    
-    # 유사도를 기준으로 내림차순으로 정렬
-    sorted_indices = sorted(similarity_indices, key=lambda x: x[1], reverse=True)
-    
-    top_indices = [index for index, _ in sorted_indices[:10]]
-    
-    return top_indices
-    
-# movieCd의 오름차순 순서 반환
-def movieCd_to_position(movieCd):
+# 영화코드(movieCd) -> 영화 상세정보(actors, movieRating, prdtYear, OpenDt, directors[], peopleNmEn, repGenreNm, movieNmEng) 함수 작성
+
+def get_movie_ratings():
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
 
-    query = '''SELECT COUNT(*)
+    query = '''SELECT movieCd, weightedRating
                FROM movies
-               WHERE movieCd < ?
     '''
-
-    cursor.execute(query, (movieCd,))
-    position = cursor.fetchone()[0] + 1
+    cursor.execute(query)
+    result = cursor.fetchall()
 
     cursor.close()
     con.close()
 
-    return position
+    movie_ratings = {}
+    for movieCd, weightedRating in result:
+        movie_ratings[movieCd] = weightedRating
 
-# movieCd 오름차순 순서에 해당하는 movieCd 반환
-def position_to_movieCd(position):
+    return movie_ratings
+
+def get_recommend_movies(movieCd):
+    similar_indices = np.argsort(similarity_matrix, axis=1)[:, ::-1][:, :20]
+
+    movie_ratings = get_movie_ratings()
+
+    top_indices = np.argsort([movie_ratings[movieCd] for movieCd in similar_indices[movieCd]])[::-1][:5]
+    top_movieCds = [similar_indices[movieCd][index] for index in top_indices]
+
+    return top_movieCds
+
+def get_top_n_movies_by_weighted_rating(n):
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
 
     query = '''SELECT movieCd
                FROM movies
-               ORDER BY movieCd ASC
-               LIMIT 1 OFFSET ?'''
+               ORDER BY weightedRating DESC
+               LIMIT ?
+    '''
 
-    cursor.execute(query, (position - 1,))
-    movieCd = cursor.fetchone()[0]
+    cursor.execute(query, (n,))
+    results = cursor.fetchall()
 
     cursor.close()
     con.close()
 
-    return movieCd
+    movie_codes = [result[0] for result in results]
+
+    return movie_codes
+
+def get_top_movies_by_genre(genre, n):
+    con = sqlite3.connect(db_path + db_name)
+    cursor = con.cursor()
+
+    query = '''SELECT movieCd
+               FROM movies
+               WHERE repGenreNm = ?
+               ORDER BY weightedRating DESC
+               LIMIT ?
+    '''
+
+    cursor.execute(query, (genre, n))
+    results = cursor.fetchall()
+
+    cursor.close()
+    con.close()
+
+    movie_codes = [result[0] for result in results]
+
+    return movie_codes
