@@ -13,11 +13,18 @@ mh = Blueprint('mh', __name__, url_prefix='/', template_folder="templates")
 #메인페이지
 @mh.route('/')
 def index():
-    return render_template("index.html")
+    m_id = ""
+    if('member_id' in session):
+        m_id = session['member_id']
+        
+    return render_template("index.html", member_id=m_id)
 
 #회원가입 페이지(폼)
 @mh.route('/signup', methods = ['GET', 'POST'])
 def signup():
+    if('member_id' in session):
+        return redirect('/')
+    
     form = signup_form()
 
     if form.validate_on_submit():
@@ -58,4 +65,10 @@ def signin():
             return render_template('login.html', form=form, error_msg=result['msg'])
 
     return render_template('login.html', form=form)
+
+#로그아웃
+@mh.route('/logout', methods = ['GET'])
+def logout():
+    session.clear()
+    return redirect('/')
 
