@@ -1,5 +1,5 @@
-from moviehome.repo import member
-from moviehome.repo import get_member, save_member
+from movie_home.repo import member
+from movie_home.repo import get_member, save_member
 
 def login(m:member):
     compare = get_member(m)

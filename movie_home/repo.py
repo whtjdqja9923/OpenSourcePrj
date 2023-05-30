@@ -15,7 +15,7 @@ class member:
     email: str = ""
     age: str = ""
 
-def create_table_movie():
+def create_table_member():
     con = sqlite3.connect(path.db_path + path.db_name)
     cursor = con.cursor()
 

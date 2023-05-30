@@ -3,11 +3,12 @@ from flask_cors import CORS
 
 def create_app():
     app = Flask(__name__)
+    app.secret_key = 'cbnuopensourceproject'
     CORS(app)
 
     # 개별 모듈에서 블루프린트 등록하는 곳
-    from moviehome import mhcontroller
-    app.register_blueprint(mhcontroller.mh)
+    from movie_home import controller
+    app.register_blueprint(controller.mh)
 
     return app
 
