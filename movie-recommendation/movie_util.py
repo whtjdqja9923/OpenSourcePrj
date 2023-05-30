@@ -1,235 +1,79 @@
-import pymysql
+import sqlite3
+import numpy as np
 
-"""
-<테이블 네이밍>
-:movie_classification: 영화 분류기준 정보를 모아놓은 테이블(genres 등)
-:movies: 모든 영화정보 목록을 모아놓은 테이블
-:genre(horror, romance 등): 장르 별 영화정보들을 모아놓은 테이블
-:ratings: 평점과 id를 매칭시켜 모아놓은 테이블
-:actor: 배우별로 출연한 영화id와 평점을 모아놓은 테이블
-"""
+db_path = "./share/"
+db_name = "movie_data.db"
 
-"""
-<계획에 따라 작성할 수도 있는 함수>
-:get_top_n_title_by_actor: actor를 입력받아 해당 actor가 출연한 영화 title rating 순으로 n만큼 반환
-"""
+similarity_matrix = np.load('similarity_matrix.npy')
 
+# 영화코드(movieCd) -> 영화 상세정보(actors, movieRating, prdtYear, OpenDt, directors[], peopleNmEn, repGenreNm, movieNmEng) 함수 작성
 
+def get_movie_ratings():
+    con = sqlite3.connect(db_path + db_name)
+    cursor = con.cursor()
 
+    query = '''SELECT movieCd, weightedRating
+               FROM movies
+    '''
+    cursor.execute(query)
+    result = cursor.fetchall()
 
+    cursor.close()
+    con.close()
 
-# id를 입력하면 해당 id의 title을 반환
-def get_title_by_id(movie_id):
-     # DB 연결
-    connection = pymysql.connect(
-        host="localhost",
-        user="username",
-        password="password",
-        db="database_name",
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor
-        )
+    movie_ratings = {}
+    for movieCd, weightedRating in result:
+        movie_ratings[movieCd] = weightedRating
 
-    # 해당 id의 title을 반환
-    try:
-        with connection.cursor() as cursor:
-            sql = "SELECT * FROM title WHERE id=%s"
-            cursor.execute(sql, movie_id)
-            result = cursor.fetchone()
-            return result['title']
-    # 예외 처리
-    except Exception as e:
-        print(f"Error: {e}")
-    # DB 연결
-    finally:
-        connection.close()
+    return movie_ratings
 
+def get_recommend_movies(movieCd):
+    similar_indices = np.argsort(similarity_matrix, axis=1)[:, ::-1][:, :20]
 
+    movie_ratings = get_movie_ratings()
 
+    top_indices = np.argsort([movie_ratings[movieCd] for movieCd in similar_indices[movieCd]])[::-1][:5]
+    top_movieCds = [similar_indices[movieCd][index] for index in top_indices]
 
+    return top_movieCds
 
-# id를 입력하면 해당 id의 rating을 반환
-def get_rating_by_id(movie_id):
-    # DB 연결
-    connection = pymysql.connect(
-        host="localhost",
-        user="username",
-        password="password",
-        db="database_name",
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor
-        )
+def get_top_n_movies_by_weighted_rating(n):
+    con = sqlite3.connect(db_path + db_name)
+    cursor = con.cursor()
 
-    # 해당 id의 rating을 반환
-    try:
-        with connection.cursor() as cursor:
-            sql = "SELECT * FROM ratings WHERE id=%s"
-            cursor.execute(sql, movie_id)
-            result = cursor.fetchone()
-            return result['rating']
-    # 예외 처리
-    except Exception as e:
-        print(f"Error: {e}")
-    # DB 연결
-    finally:
-        connection.close()
+    query = '''SELECT movieCd
+               FROM movies
+               ORDER BY weightedRating DESC
+               LIMIT ?
+    '''
 
+    cursor.execute(query, (n,))
+    results = cursor.fetchall()
 
+    cursor.close()
+    con.close()
 
+    movie_codes = [result[0] for result in results]
 
+    return movie_codes
 
-# id를 입력하면 해당 id의 actor를 n만큼 반환
-def get_n_actors_by_id(movie_id, n):
-    # DB 연결
-    connection = pymysql.connect(
-        host="localhost",
-        user="username",
-        password="password",
-        db="database_name",
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor
-        )
+def get_top_movies_by_genre(genre, n):
+    con = sqlite3.connect(db_path + db_name)
+    cursor = con.cursor()
 
-    # 해당 id의 actor를 n만큼 반환
-    try:
-        with connection.cursor() as cursor:
-            sql = "SELECT * FROM movies WHERE id=%s"
-            cursor.execute(sql, movie_id)
-            result = cursor.fetchmany(n)
-            return [r['actor'] for r in result]
-    # 예외 처리
-    except Exception as e:
-        print(f"Error: {e}")
-    # DB 연결
-    finally:
-        connection.close()
+    query = '''SELECT movieCd
+               FROM movies
+               WHERE repGenreNm = ?
+               ORDER BY weightedRating DESC
+               LIMIT ?
+    '''
 
+    cursor.execute(query, (genre, n))
+    results = cursor.fetchall()
 
+    cursor.close()
+    con.close()
 
+    movie_codes = [result[0] for result in results]
 
-
-# id, n을 입력하면 해당 id의 genres를 n개 만큼 리스트로 반환
-def get_n_genres_by_id(movie_id, n):
-    # DB 연결
-    connection = pymysql.connect(
-        host="localhost",
-        user="username",
-        password="password",
-        db="database_name",
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor
-        )
-
-    # 해당 영화의 genre를 n만큼 list로 반환
-    try:
-        with connection.cursor() as cursor:
-            sql = "SELECT * FROM movies WHERE movie_id=movie_id LIMIT %s"
-            cursor.execute(sql, n)
-            result = cursor.fetchmany(n)
-            return [r['genre'] for r in result]
-    # 예외 처리
-    except Exception as e:
-        print(f"Error: {e}")
-    # DB 연결 종료
-    finally:
-        connection.close()
-
-
-
-
-
-# rating이 가장 높은 n개의 영화정보 반환
-def get_top_n_movies(n):
-    # DB 연결
-    connection = pymysql.connect(
-        host="localhost",
-        user="username",
-        password="password",
-        db="database_name",
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor
-        )
-
-    # 해당 genre의 title을 count만큼 list로 반환
-    try:
-        with connection.cursor() as cursor:
-            sql = "SELECT * FROM genre ORDER BY rating LIMIT %s"
-            cursor.execute(sql, n)
-            result = cursor.fetchmany(n)
-            return [r['title'] for r in result]
-    # 예외 처리
-    except Exception as e:
-        print(f"Error: {e}")
-    # DB 연결 종료
-    finally:
-        connection.close()
-
-
-        
-
-
-# 해당 genre의 rating이 가장 높은 n개의 영화정보 반환
-def get_top_n_movies_by_genre(genre, n):
-    # DB 연결
-    connection = pymysql.connect(
-        host="localhost",
-        user="username",
-        password="password",
-        db="database_name",
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor
-        )
-
-    # 해당 genre의 title을 count만큼 list로 반환
-    try:
-        with connection.cursor() as cursor:
-            sql = "SELECT * FROM genre ORDER BY rating LIMIT %s"
-            cursor.execute(sql, (genre, n))
-            result = cursor.fetchmany(n)
-            return [r['title'] for r in result]
-    # 예외 처리
-    except Exception as e:
-        print(f"Error: {e}")
-    # DB 연결 종료
-    finally:
-        connection.close()
-
-
-
-
-
-# 모든 장르를 list로 반환
-def get_genres():
-    # DB 연결
-    connection = pymysql.connect(
-        host="localhost",
-        user="username",
-        password="password",
-        db="database_name",
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor
-        )
-
-    # 해당 genre의 title을 count만큼 list로 반환
-    try:
-        with connection.cursor() as cursor:
-            sql = "SELECT * FROM movie_classification WHERE id=%s"
-            cursor.execute(sql, ('genres'))
-            result = cursor.fetchall()
-            return [r['genre'] for r in result]
-    # 예외 처리
-    except Exception as e:
-        print(f"Error: {e}")
-    # DB 연결 종료
-    finally:
-        connection.close()
-
-
-
-
-
-# 추천 영화목록 반환
-def get_movie_recommendation_list():
-    list = {"a", "b", "c"}
-
-    return list
+    return movie_codes
