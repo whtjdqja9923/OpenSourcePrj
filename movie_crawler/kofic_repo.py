@@ -208,19 +208,52 @@ def save_people_list(data_list:list[people_data]):
     cursor.close()
     con.close()
 
+def save_movie_basic(data:movie_data):
+    con = sqlite3.connect(db_path + db_name)
+    cursor = con.cursor()
+
+    upsert_movie_basic = '''
+        INSERT INTO movie_basic ( 
+            "movie code", "movie name", "movie name eng", "prdt year", 
+            "open date", "type name", "prdt stat name", "rep nation name", 
+            "rep genre name", "poster img link" ) 
+            VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )
+        ON CONFLICT ("movie code") DO UPDATE
+        SET "movie name" = ?, "movie name eng" = ?, "prdt year" = ?, 
+            "open date" = ?, "type name" = ?, "prdt stat name" = ?, "rep nation name" = ?, 
+            "rep genre name" = ?, "poster img link = ?"
+        WHERE "movie code" = ?
+        '''
+    
+    movie_data = [data.movie_code, data.movie_name, data.movie_name_eng, data.prdt_year, data.open_date, 
+                    data.type_name, data.prdt_stat_name, data.rep_nation_name, data.rep_genre_name, data.poster_img_link,
+                    data.movie_name, data.movie_name_eng, data.prdt_year, data.open_date, data.type_name, 
+                    data.prdt_stat_name, data.rep_nation_name, data.rep_genre_name, data.poster_img_link, data.movie_code]
+
+    
+    cursor.execut(upsert_movie_basic, movie_data)
+        
+    con.commit()
+    cursor.close()
+    con.close()    
+
 def save_movie_detail(data:movie_data):
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
     
-    insert_movie_detail = '''
+    upsert_movie_detail = '''
         INSERT INTO movie_detail ( 
-            "movie code", "movie name org", "show time" ) 
-            VALUES ( ?, ?, ? )
+            "movie code", "movie name org", "show time", synopsis, "audience num" ) 
+            VALUES ( ?, ?, ?, ?, ? )
+        ON CONFLICT ("movie code") DO UPDATE 
+        SET "movie name org" = ?, "show time" = ?, synopsis = ?, "audience num" = ?
+        WHERE "movie code" = ?
     '''
 
-    movie_data = [data.movie_code, data.movie_name_org, data.show_time]
+    movie_data = [data.movie_code, data.movie_name_org, data.show_time, data.synopsis, data.audience_num,
+                  data.movie_name_org, data.show_time, data.synopsis, data.audience_num, data.movie_code]
 
-    cursor.execute(insert_movie_detail, movie_data)
+    cursor.execute(upsert_movie_detail, movie_data)
 
     con.commit()
     cursor.close()
@@ -228,7 +261,7 @@ def save_movie_detail(data:movie_data):
 
 #영화 검색
 def get_movie(all=False, movie_code = "", movie_name = "", movie_name_eng = "", prdt_year = "", 
-              open_date = "", type_name = "", prdt_stat_name = "", rep_nation_name = "", rep_genre_name = "", movie_name_org = "")->list:
+              open_date = "", type_name = "", prdt_stat_name = "", rep_nation_name = "", rep_genre_name = "", movie_name_org = "", synopsis = "")->list:
     
     con = sqlite3.connect(db_path + db_name)
     con.row_factory = sqlite3.Row
