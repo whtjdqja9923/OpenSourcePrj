@@ -42,6 +42,7 @@ class movie_data:
 
 @dataclass
 class movie_rating:
+    rating_id: str = ''
     movie_code: str = ''
     member_code: str = ''
     people_code: str = ''
@@ -254,6 +255,36 @@ def save_movie_detail(data:movie_data):
                   data.movie_name_org, data.show_time, data.synopsis, data.audience_num, data.movie_code]
 
     cursor.execute(upsert_movie_detail, movie_data)
+
+    con.commit()
+    cursor.close()
+    con.close()
+
+def save_rating(data:movie_rating, type="insert"):
+    con = sqlite3.connect(db_path + db_name)
+    cursor = con.cursor()
+    
+    upsert_rating = '''
+        INSERT INTO rating (
+            "rating id", "type", "score", "max score", "rating count", "source", "movie code", "people code", "member code" )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT ( "rating id" ) DO UPDATE
+        SET "type" = ?, "score" = ?, "max score" = ?, "rating count" = ?, "source" = ?, "movie code" = ?, "people code" = ?, "member code"  = ?
+        WHERE "rating id" = ?
+    '''
+    insert_rating = '''
+        INSERT INTO rating (
+            "type", "score", "max score", "rating count", "source", "movie code", "people code", "member code" )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    '''
+
+    if type == 'insert':
+        rating_data = [data.type, data.score, data.max_score, data.rating_count, data.score, data.movie_code, data.people_code, data.member_code]
+        cursor.execute(insert_rating, rating_data)
+    elif type == 'upsert':
+        rating_data = [data.rating_id, data.type, data.score, data.max_score, data.rating_count, data.score, data.movie_code, data.people_code, data.member_code,
+                       data.type, data.score, data.max_score, data.rating_count, data.score, data.movie_code, data.people_code, data.member_code, data.rating_id]
+        cursor.execute(upsert_rating, rating_data)
 
     con.commit()
     cursor.close()
