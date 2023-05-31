@@ -116,6 +116,20 @@ def create_table_movie():
         "audience num"       VARCHAR(255)     ,
         FOREIGN KEY ( "movie code" ) REFERENCES movie_basic( "movie code" )  
         ); '''
+    ddl_rating = ''' CREATE TABLE rating ( 
+        "rating id"          INTEGER NOT NULL  PRIMARY KEY  ,
+        "type"               VARCHAR(255) NOT NULL    ,
+        score                VARCHAR(255)     ,
+        "max score"          VARCHAR(255)     ,
+        "rating count"       VARCHAR(255)     ,
+        source               VARCHAR(255)     ,
+        "movie code"         VARCHAR(255)     ,
+        "people code"        VARCHAR(255)     ,
+        "member code"        INTEGER     ,
+        FOREIGN KEY ( "movie code" ) REFERENCES movie_basic( "movie code" ) ON DELETE CASCADE  ,
+        FOREIGN KEY ( "people code" ) REFERENCES people_basic( "people code" ) ON DELETE CASCADE  ,
+        FOREIGN KEY ( "member code" ) REFERENCES member( "member code" ) ON DELETE CASCADE  
+        ); '''
         
     if not cursor.execute('''select name from sqlite_master where type="table" and name="movie_basic"''').fetchall():
         cursor.execute(ddl_movie_basic)
@@ -129,6 +143,8 @@ def create_table_movie():
         cursor.execute(ddl_people_filmo)
     if not cursor.execute('''select name from sqlite_master where type="table" and name="movie_detail"''').fetchall():
         cursor.execute(ddl_movie_detail)
+    if not cursor.execute('''select name from sqlite_master where type="table" and name="rating"''').fetchall():
+        cursor.execute(ddl_rating)
 
     con.commit()
 
@@ -222,7 +238,7 @@ def save_movie_basic(data:movie_data):
         ON CONFLICT ("movie code") DO UPDATE
         SET "movie name" = ?, "movie name eng" = ?, "prdt year" = ?, 
             "open date" = ?, "type name" = ?, "prdt stat name" = ?, "rep nation name" = ?, 
-            "rep genre name" = ?, "poster img link = ?"
+            "rep genre name" = ?, "poster img link" = ?
         WHERE "movie code" = ?
         '''
     
@@ -232,7 +248,7 @@ def save_movie_basic(data:movie_data):
                     data.prdt_stat_name, data.rep_nation_name, data.rep_genre_name, data.poster_img_link, data.movie_code]
 
     
-    cursor.execut(upsert_movie_basic, movie_data)
+    cursor.execute(upsert_movie_basic, movie_data)
         
     con.commit()
     cursor.close()

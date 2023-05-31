@@ -105,7 +105,6 @@ class kofic_crawler:
 
             sleep(1)
 
-
     def searchPeopleList_crawl(self, START_PAGE, END_PAGE):
         for i in range (START_PAGE, END_PAGE+1):
             curPage = str(i)
