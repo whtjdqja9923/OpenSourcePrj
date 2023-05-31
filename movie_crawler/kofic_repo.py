@@ -32,11 +32,24 @@ class movie_data:
     prdt_stat_name: str = ''
     rep_nation_name: str = ''
     rep_genre_name: str = ''
-    directors: list[directors] = field(default_factory=list)
-    companys: list[companys] = field(default_factory=list)
-    movie_code: str = ''
     movie_name_org: str = ''
     show_time: str = ''
+    poster_img_link: str = ''
+    synopsis: str = ''
+    audience_num: str = ''
+    directors: list[directors] = field(default_factory=list)
+    companys: list[companys] = field(default_factory=list)
+
+@dataclass
+class movie_rating:
+    movie_code: str = ''
+    member_code: str = ''
+    people_code: str = ''
+    type: str = ''
+    score: str = ''
+    max_score: str = ''
+    rating_count: str = ''
+    source: str = ''
 
 #데이터 예시
 # {"peopleCd":"20389164","peopleNm":"리아드 벨라이체",
@@ -65,7 +78,8 @@ def create_table_movie():
         "type name"          VARCHAR(255)     ,
         "prdt stat name"     VARCHAR(255)     ,
         "rep nation name"    VARCHAR(255) NOT NULL    ,
-        "rep genre name"     VARCHAR(255) NOT NULL    
+        "rep genre name"     VARCHAR(255) NOT NULL    ,
+        "poster img link"    VARCHAR(1000)     
         ); '''
     ddl_companys = ''' CREATE TABLE companys ( 
         "movie code"         VARCHAR(255) NOT NULL    ,
@@ -95,9 +109,11 @@ def create_table_movie():
         ); '''
     ddl_movie_detail = ''' CREATE TABLE movie_detail ( 
         "movie code"         VARCHAR(255) NOT NULL  PRIMARY KEY  ,
-        "movie name org"            VARCHAR(255)     ,
-        "show time"               VARCHAR(255) NOT NULL    ,
-        FOREIGN KEY ( "movie code" ) REFERENCES movie_basic( "movie code" ) ON DELETE CASCADE 
+        "movie name org"     VARCHAR(255)     ,
+        "show time"          VARCHAR(255) NOT NULL    ,
+        synopsis             VARCHAR(1000)     ,
+        "audience num"       VARCHAR(255)     ,
+        FOREIGN KEY ( "movie code" ) REFERENCES movie_basic( "movie code" )  
         ); '''
         
     if not cursor.execute('''select name from sqlite_master where type="table" and name="movie_basic"''').fetchall():
@@ -220,7 +236,7 @@ def get_movie(all=False, movie_code = "", movie_name = "", movie_name_eng = "", 
 
     query_before = ''' SELECT mb."movie code" as movie_code, mb."movie name" as movie_name, mb."movie name eng" as movie_name_eng, 
         mb."prdt year" as prdt_year, mb."open date" as open_date, mb."type name" as type_name, mb."prdt stat name" as prdt_stat_name, mb."rep nation name" as rep_nation_name, 
-        mb."rep genre name" as rep_genre_name, md."movie name org" as movie_name_org, md."show time" as show_time
+        mb."rep genre name" as rep_genre_name, md."movie name org" as movie_name_org, md."show time" as show_time, mb."poster img link" as poster_img_link, md.synopsis, md."audience num" as audience_num
         FROM movie_basic mb 
 	    LEFT OUTER JOIN movie_detail md ON ( md."movie code" = mb."movie code"  )
     '''
@@ -249,7 +265,9 @@ def get_movie(all=False, movie_code = "", movie_name = "", movie_name_eng = "", 
         if rep_genre_name != "":
             where += 'mb."rep genre name" LIKE "%' + rep_genre_name + '%" AND '    
         if movie_name_org != "":
-            where += 'md."movie name org" LIKE "%' + movie_name_org + '%" AND '    
+            where += 'md."movie name org" LIKE "%' + movie_name_org + '%" AND '
+        if synopsis != "":
+            where += 'md.synopsis LIKE "%' + synopsis + '%" AND '     
         #끝에 AND 제거
         if where != "":
             where = where[:-5]
@@ -257,7 +275,9 @@ def get_movie(all=False, movie_code = "", movie_name = "", movie_name_eng = "", 
 
     result = []
     for row in cursor.execute(query_before + where).fetchall():
-        result.append(dict(row))
+        row = list(row)
+        result.append(movie_data(row[0], row[1], row[2], row[3], row[4], row[5], row[6], 
+                                 row[7], row[8], row[9], row[10], row[11], row[12], row[13]))
 
     cursor.close()
     con.close()
@@ -296,7 +316,8 @@ def get_people(all=False, people_code="", people_name="", people_name_eng="", re
 
     result = []
     for row in cursor.execute(query_before + where).fetchall():
-        result.append(dict(row))
+        row = list(row)
+        result.append(people_data(row[0], row[1], row[2], row[3], row[4]))
 
     cursor.close()
     con.close()
