@@ -1,7 +1,17 @@
 from kofic_repo import movie_data, movie_rating
+from kofic_repo import get_movie, save_rating, save_movie_basic, save_movie_detail
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+import re
+from datetime import datetime
+
+from time import sleep
 
 tmdb_url = "https://www.themoviedb.org/search?language=ko&query="
 
@@ -13,13 +23,13 @@ def tmdb_crawl(m:movie_data, r:movie_rating) -> bool:
     r.source = "TMDB"
     r.type = "movie"
     
-    options = Options()
-    options.binary_location = './lib/chrome/browser/App/Chrome-bin/Chrome.exe'
-    webdriver_path = './lib/chrome/driver/chromedriver.exe'
-
-    driver = webdriver.Chrome(webdriver_path, options=options)
+    driver = selenium_init()
     
-    driver.get(tmdb_url + m.movie_name.replace(' ', '+'))
+    try:    
+        driver.get(tmdb_url + m.movie_name.replace(' ', '+'))
+    except:
+        ret = False
+        return ret
     
     try:
         driver.find_element(By.XPATH, """//*[@id="main"]/section//h2[contains(text(),'""" + m.movie_name + """')]""").click()
@@ -50,6 +60,21 @@ def tmdb_crawl(m:movie_data, r:movie_rating) -> bool:
       ret = False
 
     return ret
+
+def selenium_init():
+    webdriver_path = './lib/chrome/driver/chromedriver.exe'
+    options = Options()
+
+    options.binary_location = './lib/chrome/browser/App/Chrome-bin/Chrome.exe'
+    options.add_argument('headless')
+    # self.options.add_argument('--no-sandbox')
+    options.add_argument('--no-default-browser-check')
+    options.add_argument('--no-first-run')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--log-level=3')
+    options.add_argument("User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36")
+    
+    return webdriver.Chrome(webdriver_path, options=options)
 
 if __name__ == '__main__':
     import sqlite3
