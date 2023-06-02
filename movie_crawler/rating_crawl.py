@@ -50,3 +50,18 @@ def tmdb_crawl(m:movie_data, r:movie_rating) -> bool:
       ret = False
 
     return ret
+
+if __name__ == '__main__':
+    movies = get_movie(movie_name='사랑의 고고학')
+    movie = movies[0]
+    rating = movie_rating()
+    
+    if tmdb_crawl(movie, rating):
+        save_movie_basic(movie)
+        save_movie_detail(movie)
+        save_rating(rating)
+    else:
+        #오류 기록
+        f = open('tmdb_crawl_fail_list.txt', 'a+', encoding='utf-8')
+        f.write(datetime.now().strftime("%m.%d.%H:%M:%S") + '\t' + movie.movie_code + '\t' + movie.movie_name + '\n')
+        f.close()
