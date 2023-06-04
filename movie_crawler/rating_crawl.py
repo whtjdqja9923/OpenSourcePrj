@@ -56,8 +56,9 @@ def tmdb_crawl(m:movie_data, r:movie_rating) -> bool:
         r_count = driver.find_element(By.XPATH, '''//*[@class="rating_details"]//h3[contains(text(),'Ratings')]''').text
         r_count = re.sub(r'[^0-9]', '', r_count)
         r.rating_count = r_count
+        
     except:
-      ret = False
+        ret = False
 
     return ret
 
@@ -75,7 +76,7 @@ def selenium_init():
     options.add_argument("User-Agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36")
     
     return webdriver.Chrome(webdriver_path, options=options)
-
+            
 def work(id, list: list, movie_list: list, rating_list: list, err_movie_list:list):
     
     for item in list:
@@ -96,7 +97,7 @@ def work(id, list: list, movie_list: list, rating_list: list, err_movie_list:lis
             f.close()
             
     return 
-
+    
 if __name__ == '__main__':
     import sqlite3
 
@@ -112,12 +113,25 @@ if __name__ == '__main__':
     WHERE md.synopsis IS NULL or md.synopsis = ""
     ORDER BY mb."movie code" DESC
     '''
-    rows = cursor.execute(query).fetchall()
+        
+    rows_before = cursor.execute(query).fetchall()
     
     from threading import Thread
     
     unit = 1000
     max_thread = 10
+    err_movie_list = []
+    
+    # 에러목록 불러오기, 처음실행하면 주석처리
+    for i in range(max_thread):
+        f = open('tmdb_crawl_fail_list' + str(i) + '.txt', 'r', encoding='utf-8')
+        lines = f.readlines()
+        for line in lines:
+            err_movie_list.append(line.split('\t')[1])
+        f.close()
+        
+    # 중복제거
+    err_movie_list = list(set(err_movie_list))
     
     for rows in [rows_before[i:i+unit] for i in range(0, len(rows_before), unit)]:
         movie_result_list = []
