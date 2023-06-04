@@ -8,5 +8,5 @@ kofic_api_url = {"searchMovieList":"http://kobis.or.kr/kobisopenapi/webservice/r
                 "searchMovieInfo":"http://kobis.or.kr/kobisopenapi/webservice/rest/movie/searchMovieInfo.json?"}
 
 db_path = "./share/"
-db_name = "movie_data.db"
+db_name = "database.db"
 

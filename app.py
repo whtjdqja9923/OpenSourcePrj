@@ -7,8 +7,8 @@ def create_app():
     CORS(app)
 
     # 개별 모듈에서 블루프린트 등록하는 곳
-    from movie_home import controller
-    app.register_blueprint(controller.mh)
+    import movie_home
+    app.register_blueprint(movie_home.mh)
 
     return app
 

@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 import sqlite3
 
 db_path = "./share/"
-db_name = "movie_data.db"
+db_name = "database.db"
 
 #데이터 예시
 #{"movieCd":"20211567","movieNm":"수프와 이데올로기","movieNmEn":"Soup and Ideology",

@@ -154,7 +154,7 @@ if __name__ == "__main__":
     import sqlite3
 
     db_path = "./share/"
-    db_name = "movie_data.db"
+    db_name = "database.db"
 
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
