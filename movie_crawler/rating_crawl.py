@@ -114,17 +114,32 @@ if __name__ == '__main__':
     '''
     rows = cursor.execute(query).fetchall()
     
-    for row in rows:
-        movies = get_movie(movie_name=row)
-        movie = movies[0]
-        rating = movie_rating()
-
-        if tmdb_crawl(movie, rating):
-            save_movie_basic(movie)
-            save_movie_detail(movie)
-            save_rating(rating)
-        else:
-            #오류 기록
-            f = open('tmdb_crawl_fail_list.txt', 'a+', encoding='utf-8')
-            f.write(datetime.now().strftime("%m.%d.%H:%M:%S") + '\t' + movie.movie_code + '\t' + movie.movie_name + '\n')
-            f.close()
+    from threading import Thread
+    
+    unit = 1000
+    max_thread = 10
+    
+    for rows in [rows_before[i:i+unit] for i in range(0, len(rows_before), unit)]:
+        movie_result_list = []
+        rating_result_list = []
+        
+        threads = []
+        for i in range(max_thread):
+            start = int(len(rows) / max_thread * i)
+            end = int(len(rows) / max_thread * (i + 1))
+            a = rows[start:end]
+            t = Thread(target=work, args=(str(i), rows[start:end], movie_result_list, rating_result_list, err_movie_list))
+            t.daemon = True
+            t.start()
+            threads.append(t)
+            
+        for t in threads:
+            t.join()
+        
+        for item in movie_result_list:
+            save_movie_basic(item)
+            save_movie_detail(item)
+        for item in rating_result_list:
+            save_rating(item)
+        
+        sleep(2)
