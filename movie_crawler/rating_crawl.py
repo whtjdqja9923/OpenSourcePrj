@@ -76,6 +76,27 @@ def selenium_init():
     
     return webdriver.Chrome(webdriver_path, options=options)
 
+def work(id, list: list, movie_list: list, rating_list: list, err_movie_list:list):
+    
+    for item in list:
+        if item[0] in err_movie_list:
+            continue
+        
+        movies = get_movie(movie_code=item[0])
+        movie = movies[0]
+        rating = movie_rating()
+        
+        if tmdb_crawl(movie, rating):
+            movie_list.append(movie)
+            rating_list.append(rating)
+        else:
+            #오류 기록
+            f = open('tmdb_crawl_fail_list' + id + '.txt', 'a+', encoding='utf-8')
+            f.write(datetime.now().strftime("%m.%d.%H:%M:%S") + '\t' + movie.movie_code + '\t' + movie.movie_name + '\n')
+            f.close()
+            
+    return 
+
 if __name__ == '__main__':
     import sqlite3
 
