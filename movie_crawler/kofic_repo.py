@@ -37,6 +37,7 @@ class movie_data:
     poster_img_link: str = ''
     synopsis: str = ''
     audience_num: str = ''
+    total_gross: str = ''
     directors: list[directors] = field(default_factory=list)
     companys: list[companys] = field(default_factory=list)
 
@@ -114,6 +115,7 @@ def create_table_movie():
         "show time"          VARCHAR(255) NOT NULL    ,
         synopsis             VARCHAR(1000)     ,
         "audience num"       VARCHAR(255)     ,
+	    "total gross"        VARCHAR(255)     ,
         FOREIGN KEY ( "movie code" ) REFERENCES movie_basic( "movie code" )  
         ); '''
     ddl_rating = ''' CREATE TABLE rating ( 
@@ -260,15 +262,15 @@ def save_movie_detail(data:movie_data):
     
     upsert_movie_detail = '''
         INSERT INTO movie_detail ( 
-            "movie code", "movie name org", "show time", synopsis, "audience num" ) 
-            VALUES ( ?, ?, ?, ?, ? )
+            "movie code", "movie name org", "show time", synopsis, "audience num", "total gross" ) 
+            VALUES ( ?, ?, ?, ?, ?, ? )
         ON CONFLICT ("movie code") DO UPDATE 
-        SET "movie name org" = ?, "show time" = ?, synopsis = ?, "audience num" = ?
+        SET "movie name org" = ?, "show time" = ?, synopsis = ?, "audience num" = ?, "total gross" = ?
         WHERE "movie code" = ?
     '''
 
-    movie_data = [data.movie_code, data.movie_name_org, data.show_time, data.synopsis, data.audience_num,
-                  data.movie_name_org, data.show_time, data.synopsis, data.audience_num, data.movie_code]
+    movie_data = [data.movie_code, data.movie_name_org, data.show_time, data.synopsis, data.audience_num, data.total_gross,
+                  data.movie_name_org, data.show_time, data.synopsis, data.audience_num, data.total_gross, data.movie_code]
 
     cursor.execute(upsert_movie_detail, movie_data)
 
@@ -316,7 +318,7 @@ def get_movie(all=False, movie_code = "", movie_name = "", movie_name_eng = "", 
 
     query_before = ''' SELECT mb."movie code" as movie_code, mb."movie name" as movie_name, mb."movie name eng" as movie_name_eng, 
         mb."prdt year" as prdt_year, mb."open date" as open_date, mb."type name" as type_name, mb."prdt stat name" as prdt_stat_name, mb."rep nation name" as rep_nation_name, 
-        mb."rep genre name" as rep_genre_name, md."movie name org" as movie_name_org, md."show time" as show_time, mb."poster img link" as poster_img_link, md.synopsis, md."audience num" as audience_num
+        mb."rep genre name" as rep_genre_name, md."movie name org" as movie_name_org, md."show time" as show_time, mb."poster img link" as poster_img_link, md.synopsis as synopsis, md."audience num" as audience_num, md."total gross" as total_gross
         FROM movie_basic mb 
 	    LEFT OUTER JOIN movie_detail md ON ( md."movie code" = mb."movie code"  )
     '''
@@ -357,7 +359,7 @@ def get_movie(all=False, movie_code = "", movie_name = "", movie_name_eng = "", 
     for row in cursor.execute(query_before + where).fetchall():
         row = list(row)
         result.append(movie_data(row[0], row[1], row[2], row[3], row[4], row[5], row[6], 
-                                 row[7], row[8], row[9], row[10], row[11], row[12], row[13]))
+                                 row[7], row[8], row[9], row[10], row[11], row[12], row[13], row[14]))
 
     cursor.close()
     con.close()
