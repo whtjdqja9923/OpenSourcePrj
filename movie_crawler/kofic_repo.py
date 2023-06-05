@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 import sqlite3
 
 db_path = "./share/"
-db_name = "movie_data.db"
+db_name = "database.db"
 
 #데이터 예시
 #{"movieCd":"20211567","movieNm":"수프와 이데올로기","movieNmEn":"Soup and Ideology",
@@ -32,11 +32,26 @@ class movie_data:
     prdt_stat_name: str = ''
     rep_nation_name: str = ''
     rep_genre_name: str = ''
-    directors: list[directors] = field(default_factory=list)
-    companys: list[companys] = field(default_factory=list)
-    movie_code: str = ''
     movie_name_org: str = ''
     show_time: str = ''
+    poster_img_link: str = ''
+    synopsis: str = ''
+    audience_num: str = ''
+    total_gross: str = ''
+    directors: list[directors] = field(default_factory=list)
+    companys: list[companys] = field(default_factory=list)
+
+@dataclass
+class movie_rating:
+    rating_id: str = ''
+    movie_code: str = ''
+    member_code: str = ''
+    people_code: str = ''
+    type: str = ''
+    score: str = ''
+    max_score: str = ''
+    rating_count: str = ''
+    source: str = ''
 
 #데이터 예시
 # {"peopleCd":"20389164","peopleNm":"리아드 벨라이체",
@@ -65,7 +80,8 @@ def create_table_movie():
         "type name"          VARCHAR(255)     ,
         "prdt stat name"     VARCHAR(255)     ,
         "rep nation name"    VARCHAR(255) NOT NULL    ,
-        "rep genre name"     VARCHAR(255) NOT NULL    
+        "rep genre name"     VARCHAR(255) NOT NULL    ,
+        "poster img link"    VARCHAR(1000)     
         ); '''
     ddl_companys = ''' CREATE TABLE companys ( 
         "movie code"         VARCHAR(255) NOT NULL    ,
@@ -95,9 +111,26 @@ def create_table_movie():
         ); '''
     ddl_movie_detail = ''' CREATE TABLE movie_detail ( 
         "movie code"         VARCHAR(255) NOT NULL  PRIMARY KEY  ,
-        "movie name org"            VARCHAR(255)     ,
-        "show time"               VARCHAR(255) NOT NULL    ,
-        FOREIGN KEY ( "movie code" ) REFERENCES movie_basic( "movie code" ) ON DELETE CASCADE 
+        "movie name org"     VARCHAR(255)     ,
+        "show time"          VARCHAR(255) NOT NULL    ,
+        synopsis             VARCHAR(1000)     ,
+        "audience num"       VARCHAR(255)     ,
+	    "total gross"        VARCHAR(255)     ,
+        FOREIGN KEY ( "movie code" ) REFERENCES movie_basic( "movie code" )  
+        ); '''
+    ddl_rating = ''' CREATE TABLE rating ( 
+        "rating id"          INTEGER NOT NULL  PRIMARY KEY  ,
+        "type"               VARCHAR(255) NOT NULL    ,
+        score                VARCHAR(255)     ,
+        "max score"          VARCHAR(255)     ,
+        "rating count"       VARCHAR(255)     ,
+        source               VARCHAR(255)     ,
+        "movie code"         VARCHAR(255)     ,
+        "people code"        VARCHAR(255)     ,
+        "member code"        INTEGER     ,
+        FOREIGN KEY ( "movie code" ) REFERENCES movie_basic( "movie code" ) ON DELETE CASCADE  ,
+        FOREIGN KEY ( "people code" ) REFERENCES people_basic( "people code" ) ON DELETE CASCADE  ,
+        FOREIGN KEY ( "member code" ) REFERENCES member( "member code" ) ON DELETE CASCADE  
         ); '''
         
     if not cursor.execute('''select name from sqlite_master where type="table" and name="movie_basic"''').fetchall():
@@ -112,6 +145,8 @@ def create_table_movie():
         cursor.execute(ddl_people_filmo)
     if not cursor.execute('''select name from sqlite_master where type="table" and name="movie_detail"''').fetchall():
         cursor.execute(ddl_movie_detail)
+    if not cursor.execute('''select name from sqlite_master where type="table" and name="rating"''').fetchall():
+        cursor.execute(ddl_rating)
 
     con.commit()
 
@@ -192,19 +227,82 @@ def save_people_list(data_list:list[people_data]):
     cursor.close()
     con.close()
 
+def save_movie_basic(data:movie_data):
+    con = sqlite3.connect(db_path + db_name)
+    cursor = con.cursor()
+
+    upsert_movie_basic = '''
+        INSERT INTO movie_basic ( 
+            "movie code", "movie name", "movie name eng", "prdt year", 
+            "open date", "type name", "prdt stat name", "rep nation name", 
+            "rep genre name", "poster img link" ) 
+            VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )
+        ON CONFLICT ("movie code") DO UPDATE
+        SET "movie name" = ?, "movie name eng" = ?, "prdt year" = ?, 
+            "open date" = ?, "type name" = ?, "prdt stat name" = ?, "rep nation name" = ?, 
+            "rep genre name" = ?, "poster img link" = ?
+        WHERE "movie code" = ?
+        '''
+    
+    movie_data = [data.movie_code, data.movie_name, data.movie_name_eng, data.prdt_year, data.open_date, 
+                    data.type_name, data.prdt_stat_name, data.rep_nation_name, data.rep_genre_name, data.poster_img_link,
+                    data.movie_name, data.movie_name_eng, data.prdt_year, data.open_date, data.type_name, 
+                    data.prdt_stat_name, data.rep_nation_name, data.rep_genre_name, data.poster_img_link, data.movie_code]
+
+    
+    cursor.execute(upsert_movie_basic, movie_data)
+        
+    con.commit()
+    cursor.close()
+    con.close()    
+
 def save_movie_detail(data:movie_data):
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
     
-    insert_movie_detail = '''
+    upsert_movie_detail = '''
         INSERT INTO movie_detail ( 
-            "movie code", "movie name org", "show time" ) 
-            VALUES ( ?, ?, ? )
+            "movie code", "movie name org", "show time", synopsis, "audience num", "total gross" ) 
+            VALUES ( ?, ?, ?, ?, ?, ? )
+        ON CONFLICT ("movie code") DO UPDATE 
+        SET "movie name org" = ?, "show time" = ?, synopsis = ?, "audience num" = ?, "total gross" = ?
+        WHERE "movie code" = ?
     '''
 
-    movie_data = [data.movie_code, data.movie_name_org, data.show_time]
+    movie_data = [data.movie_code, data.movie_name_org, data.show_time, data.synopsis, data.audience_num, data.total_gross,
+                  data.movie_name_org, data.show_time, data.synopsis, data.audience_num, data.total_gross, data.movie_code]
 
-    cursor.execute(insert_movie_detail, movie_data)
+    cursor.execute(upsert_movie_detail, movie_data)
+
+    con.commit()
+    cursor.close()
+    con.close()
+
+def save_rating(data:movie_rating, type="insert"):
+    con = sqlite3.connect(db_path + db_name)
+    cursor = con.cursor()
+    
+    upsert_rating = '''
+        INSERT INTO rating (
+            "rating id", "type", "score", "max score", "rating count", "source", "movie code", "people code", "member code" )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT ( "rating id" ) DO UPDATE
+        SET "type" = ?, "score" = ?, "max score" = ?, "rating count" = ?, "source" = ?, "movie code" = ?, "people code" = ?, "member code"  = ?
+        WHERE "rating id" = ?
+    '''
+    insert_rating = '''
+        INSERT INTO rating (
+            "type", "score", "max score", "rating count", "source", "movie code", "people code", "member code" )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    '''
+
+    if type == 'insert':
+        rating_data = [data.type, data.score, data.max_score, data.rating_count, data.score, data.movie_code, data.people_code, data.member_code]
+        cursor.execute(insert_rating, rating_data)
+    elif type == 'upsert':
+        rating_data = [data.rating_id, data.type, data.score, data.max_score, data.rating_count, data.score, data.movie_code, data.people_code, data.member_code,
+                       data.type, data.score, data.max_score, data.rating_count, data.score, data.movie_code, data.people_code, data.member_code, data.rating_id]
+        cursor.execute(upsert_rating, rating_data)
 
     con.commit()
     cursor.close()
@@ -212,7 +310,7 @@ def save_movie_detail(data:movie_data):
 
 #영화 검색
 def get_movie(all=False, movie_code = "", movie_name = "", movie_name_eng = "", prdt_year = "", 
-              open_date = "", type_name = "", prdt_stat_name = "", rep_nation_name = "", rep_genre_name = "", movie_name_org = "")->list:
+              open_date = "", type_name = "", prdt_stat_name = "", rep_nation_name = "", rep_genre_name = "", movie_name_org = "", synopsis = "")->list:
     
     con = sqlite3.connect(db_path + db_name)
     con.row_factory = sqlite3.Row
@@ -220,7 +318,7 @@ def get_movie(all=False, movie_code = "", movie_name = "", movie_name_eng = "", 
 
     query_before = ''' SELECT mb."movie code" as movie_code, mb."movie name" as movie_name, mb."movie name eng" as movie_name_eng, 
         mb."prdt year" as prdt_year, mb."open date" as open_date, mb."type name" as type_name, mb."prdt stat name" as prdt_stat_name, mb."rep nation name" as rep_nation_name, 
-        mb."rep genre name" as rep_genre_name, md."movie name org" as movie_name_org, md."show time" as show_time
+        mb."rep genre name" as rep_genre_name, md."movie name org" as movie_name_org, md."show time" as show_time, mb."poster img link" as poster_img_link, md.synopsis as synopsis, md."audience num" as audience_num, md."total gross" as total_gross
         FROM movie_basic mb 
 	    LEFT OUTER JOIN movie_detail md ON ( md."movie code" = mb."movie code"  )
     '''
@@ -249,7 +347,9 @@ def get_movie(all=False, movie_code = "", movie_name = "", movie_name_eng = "", 
         if rep_genre_name != "":
             where += 'mb."rep genre name" LIKE "%' + rep_genre_name + '%" AND '    
         if movie_name_org != "":
-            where += 'md."movie name org" LIKE "%' + movie_name_org + '%" AND '    
+            where += 'md."movie name org" LIKE "%' + movie_name_org + '%" AND '
+        if synopsis != "":
+            where += 'md.synopsis LIKE "%' + synopsis + '%" AND '     
         #끝에 AND 제거
         if where != "":
             where = where[:-5]
@@ -257,7 +357,9 @@ def get_movie(all=False, movie_code = "", movie_name = "", movie_name_eng = "", 
 
     result = []
     for row in cursor.execute(query_before + where).fetchall():
-        result.append(dict(row))
+        row = list(row)
+        result.append(movie_data(row[0], row[1], row[2], row[3], row[4], row[5], row[6], 
+                                 row[7], row[8], row[9], row[10], row[11], row[12], row[13], row[14]))
 
     cursor.close()
     con.close()
@@ -296,7 +398,8 @@ def get_people(all=False, people_code="", people_name="", people_name_eng="", re
 
     result = []
     for row in cursor.execute(query_before + where).fetchall():
-        result.append(dict(row))
+        row = list(row)
+        result.append(people_data(row[0], row[1], row[2], row[3], row[4]))
 
     cursor.close()
     con.close()

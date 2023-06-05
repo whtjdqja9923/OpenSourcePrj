@@ -4,7 +4,7 @@ import sqlite3
 @dataclass(frozen=True)
 class path:
     db_path = "./share/"
-    db_name = "user_data.db"
+    db_name = "database.db"
 
 @dataclass
 class member:
@@ -15,7 +15,7 @@ class member:
     email: str = ""
     age: str = ""
 
-def create_table_movie():
+def create_table_member():
     con = sqlite3.connect(path.db_path + path.db_name)
     cursor = con.cursor()
 
@@ -34,7 +34,9 @@ def create_table_movie():
         "type"               VARCHAR(255)     ,
         "people code"        VARCHAR(255)     ,
         "movie code"         VARCHAR(255)     ,
-        FOREIGN KEY ( "member code" ) REFERENCES member( "member code" )  
+        FOREIGN KEY ( "member code" ) REFERENCES member( "member code" ) ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY ( "people code" ) REFERENCES people_basic( "people code" ) ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY ( "movie code" ) REFERENCES movie_basic( "movie code" ) ON DELETE CASCADE ON UPDATE CASCADE
         ); '''
     
     if not cursor.execute('''select name from sqlite_master where type="table" and name="member"''').fetchall():

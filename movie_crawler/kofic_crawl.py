@@ -105,7 +105,6 @@ class kofic_crawler:
 
             sleep(1)
 
-
     def searchPeopleList_crawl(self, START_PAGE, END_PAGE):
         for i in range (START_PAGE, END_PAGE+1):
             curPage = str(i)
@@ -155,7 +154,7 @@ if __name__ == "__main__":
     import sqlite3
 
     db_path = "./share/"
-    db_name = "movie_data.db"
+    db_name = "database.db"
 
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
