@@ -104,3 +104,32 @@ def movie_list(col_num=3, keyword="", m_id="", per_page=12, offset=0):
         result.append(m[i:i+col_num])
         
     return result[offset:offset+per_page], len(result)
+
+def user_rating(data:dict={}, type="movie"):
+    d = mv.movie_rating()
+    d.type = type
+    d.source = "user"
+    d.score = data["score"]
+    d.max_score = data["max_score"]
+    
+    m = get_member(member(member_id=data["member_id"]))
+    d.member_code = m[0].member_code
+    if type == "movie":
+        d.movie_code = data["movie_code"]
+        d.people_code = ""
+    elif type == "people":
+        d.people_code = data["people_code"]
+        d.movie_code = ""
+    
+    before = mv.get_rating(code=d.member_code, type="member")
+    if type == "movie":
+        if before is not None and any(item.movie_code == data['movie_code'] for item in before):
+            mv.save_rating(d, type="update")
+        else:
+            mv.save_rating(d, type="insert")
+    elif type == "people":
+        if before is not None and any(item.people_code == data['people_code'] for item in before):
+            mv.save_rating(d, type="update")
+        else:
+            mv.save_rating(d, type="insert")
+
