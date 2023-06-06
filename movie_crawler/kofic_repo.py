@@ -60,11 +60,11 @@ class movie_rating:
 @dataclass
 class people_data:
     people_code: str = ''
-    poeple_name: str = ''
+    people_name: str = ''
     people_name_eng: str = ''
     rep_role_name: str = ''
     filmo_names: list[str] = field(default_factory=list)
-    filmo_comapct: str = ''
+    filmo_compact: str = ''
 
 #테이블 조회 후 없으면 필요테이블 생성
 def create_table_movie():
@@ -282,27 +282,24 @@ def save_rating(data:movie_rating, type="insert"):
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
     
-    upsert_rating = '''
-        INSERT INTO rating (
-            "rating id", "type", "score", "max score", "rating count", "source", "movie code", "people code", "member code" )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT ( "rating id" ) DO UPDATE
-        SET "type" = ?, "score" = ?, "max score" = ?, "rating count" = ?, "source" = ?, "movie code" = ?, "people code" = ?, "member code"  = ?
-        WHERE "rating id" = ?
+    update_rating = '''
+        UPDATE rating
+            SET "type" = ?, "score" = ?, "max score" = ?, "rating count" = ?, "source" = ?
+        WHERE "movie code" = ? AND "people code" = ? AND "member code" = ?;
     '''
     insert_rating = '''
         INSERT INTO rating (
             "type", "score", "max score", "rating count", "source", "movie code", "people code", "member code" )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
     '''
 
     if type == 'insert':
-        rating_data = [data.type, data.score, data.max_score, data.rating_count, data.score, data.movie_code, data.people_code, data.member_code]
+        rating_data = [data.type, data.score, data.max_score, data.rating_count, data.source, data.movie_code, data.people_code, data.member_code]
         cursor.execute(insert_rating, rating_data)
-    elif type == 'upsert':
-        rating_data = [data.rating_id, data.type, data.score, data.max_score, data.rating_count, data.score, data.movie_code, data.people_code, data.member_code,
-                       data.type, data.score, data.max_score, data.rating_count, data.score, data.movie_code, data.people_code, data.member_code, data.rating_id]
-        cursor.execute(upsert_rating, rating_data)
+    elif type == 'update':
+        rating_data = [data.type, data.score, data.max_score, data.rating_count, data.source, 
+                       data.movie_code, data.people_code, data.member_code]
+        cursor.execute(update_rating, rating_data)
 
     con.commit()
     cursor.close()
@@ -366,21 +363,52 @@ def get_movie(all=False, movie_code = "", movie_name = "", movie_name_eng = "", 
 
     return result
 
-def get_people(all=False, people_code="", people_name="", people_name_eng="", rep_role_name="", filmo_compact=""):
+def get_movie_list_audience_desc(member_code="None"):
     con = sqlite3.connect(db_path + db_name)
     con.row_factory = sqlite3.Row
     cursor = con.cursor()
 
-    query_before = ''' SELECT pb."people code" as people_code, pb."people name" as people_name, pb."people name eng" as people_name_eng, pb."filmo compact" as filmo_compact
+    query = '''SELECT mb."movie code", mb."movie name", mb."prdt year", mb."open date", mb."type name", mb."prdt stat name", mb."rep nation name", mb."rep genre name", mb."poster img link", md."movie name org", md."show time", md.synopsis, md."audience num", md."total gross", r."score", r."max score", r.source, r."rating count", ur."score" as user_score, ur."max score" as user_max_score
+    FROM movie_basic mb 
+        LEFT OUTER JOIN movie_detail md ON ( md."movie code" = mb."movie code"  )  
+        LEFT OUTER JOIN 
+            (SELECT r."movie code", avg(r."score") as score, r."max score", r."rating count", r.source
+            FROM rating r 
+            WHERE type = "movie" and source != "user"
+            GROUP BY r."movie code", r."max score", r."source") r
+        ON ( r."movie code" = mb."movie code"  )  
+        LEFT OUTER JOIN
+            (SELECT r."score", r."max score", r."movie code"
+            FROM rating r 
+            WHERE type = "movie" AND "member code" = ?) ur
+        ON ( r."movie code" = ur."movie code" )
+    ORDER BY CAST(md."audience num" as int) DESC
+    '''
+    
+    result = []
+    for row in cursor.execute(query, (str(member_code), )).fetchall():
+        row = list(row)
+        result.append([movie_data(movie_code=row[0], movie_name=row[1], prdt_year=row[2], open_date=row[3], type_name=row[4], prdt_stat_name=row[5], rep_nation_name=row[6], rep_genre_name=row[7], poster_img_link=row[8], movie_name_org=row[9], show_time=row[10], synopsis=row[11], audience_num=row[12], total_gross=row[13]),
+                       movie_rating(movie_code=row[0], score=row[14], max_score=row[15], source=row[16], rating_count=row[17]), 
+                       movie_rating(movie_code=row[0], score=row[18], max_score=row[19], source="user", member_code=member_code)])
+
+    cursor.close()
+    con.close()
+
+    return result
+
+def get_people(all=False, people_code="", people_name="", people_name_eng="", rep_role_name="", filmo_compact="", off_set=0, per_page=10):
+    con = sqlite3.connect(db_path + db_name)
+    con.row_factory = sqlite3.Row
+    cursor = con.cursor()
+
+    query_before = ''' SELECT pb."people code" as people_code, pb."people name" as people_name, pb."people name eng" as people_name_eng, pb."filmo compact" as filmo_compact,
     pb."rep role name" as rep_role_name
         FROM people_basic pb 
     '''
-
-    if all == True:
-        where += ";"
-    else:
+    where = "WHERE "
+    if not all:
         #where절 생성을 위해 입력받은 변수 확인
-        where = "WHERE "
         if people_code != "":
             where += 'pb."people code" LIKE "%' + people_code + '%" AND '
         if people_name != "":
@@ -391,15 +419,15 @@ def get_people(all=False, people_code="", people_name="", people_name_eng="", re
             where += 'pb."rep role name" LIKE "%' + rep_role_name + '%" AND '
         if filmo_compact != "":
             where += 'pb."filmo compact" LIKE "%' + filmo_compact + '%" AND '
-        #끝에 AND 제거
-        if where != "":
-            where = where[:-5]
-            where += ";"
-
+    
+    where += ' (pb."rep role name" LIKE "%감독%" OR pb."rep role name" LIKE "%배우%") '
+    
+    where += ''' LIMIT (?) OFFSET (?); '''
     result = []
-    for row in cursor.execute(query_before + where).fetchall():
+    for row in cursor.execute(query_before + where, (per_page, off_set, )).fetchall():
+        
         row = list(row)
-        result.append(people_data(row[0], row[1], row[2], row[3], row[4]))
+        result.append(people_data(people_code=row[0], people_name=row[1], people_name_eng=row[2], filmo_compact=row[3], rep_role_name=row[4]))
 
     cursor.close()
     con.close()
@@ -432,6 +460,35 @@ def get_filmo(all=False, people_code="", filmo_name=""):
     result = []
     for row in cursor.execute(query_before + where).fetchall():
         result.append(dict(row))
+
+    cursor.close()
+    con.close()
+
+    return result
+
+def get_rating(all=False, code="", type="movie") -> list:
+    con = sqlite3.connect(db_path + db_name)
+    con.row_factory = sqlite3.Row
+    cursor = con.cursor()
+
+    query_before = ''' SELECT r."rating id", r."type", r.score, r."max score", r."rating count", r.source, r."movie code", r."people code", r."member code"
+    FROM rating r
+    
+    '''
+    if type == "movie":
+        where = 'WHERE r."movie code" = (?);'
+    elif type == "people":
+        where = 'WHERE r."people code" = (?);'
+    elif type == "member":
+        where = 'WHERE r."member code" = (?);'
+
+    result = []
+    
+    for row in cursor.execute(query_before + where, (code, )).fetchall():
+        row = list(row)
+        result.append(movie_rating(rating_id=row[0], type=row[1], score=row[2], max_score=row[3], rating_count=row[4], source=row[5],
+                                       movie_code=row[6], people_code=row[7], member_code=row[8]))
+        
 
     cursor.close()
     con.close()
