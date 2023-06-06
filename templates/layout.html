@@ -1,0 +1,81 @@
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <script>
+            alert("{{messages[-1]}}")
+        </script>
+    {% endif %}
+{% endwith %}
+
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>영화추천 프로젝트:어쩌마 마주친 그대</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+		<noscript><link rel="stylesheet" href="{{url_for('static', filename='css/noscript.css')}}" /></noscript>
+	</head>
+
+    <body class="is-preload">
+        <div id="'page-wrapper">
+
+            <!-- Header -->
+            <header id="header">
+                <h1 id="logo"><a href="/">재밌는거없나</a></h1>
+                <nav id="nav">
+                    <ul>
+                        <li><a href="/">홈</a></li>
+                        <li><a href="/movies">영화목록</a></li>
+                        <li><a href="/actors">배우목록</a></li>
+                        <li><a href="/recommendation">추천받기</a></li>
+                        <li>
+                        {% if member_id %}
+                            <li>
+                                <a href="#" style="color: #08f818;">{{ member_id }}님</a>
+                                <ul>
+                                    <li><a href="/member">나의 정보</a></li>
+                                    <li><a href="/logout">로그아웃</a></li>
+                                    <li>
+                                </ul>
+                            </li>
+                        {% else %}
+                            <li><a href="/signin" class="button primary">로그인</a></li>
+                        {% endif %}
+                        </li>
+                    </ul>
+                </nav>
+            </header>
+
+
+            {% block content %}
+            {% endblock %}
+
+            <!-- Footer -->
+            <footer id="footer">
+                <ul class="icons">
+                    <li><a href="#" class="icon brands alt fa-twitter"><span class="label">Twitter</span></a></li>
+                    <li><a href="#" class="icon brands alt fa-facebook-f"><span class="label">Facebook</span></a></li>
+                    <li><a href="#" class="icon brands alt fa-linkedin-in"><span class="label">LinkedIn</span></a></li>
+                    <li><a href="#" class="icon brands alt fa-instagram"><span class="label">Instagram</span></a></li>
+                    <li><a href="#" class="icon brands alt fa-github"><span class="label">GitHub</span></a></li>
+                    <li><a href="#" class="icon solid alt fa-envelope"><span class="label">Email</span></a></li>
+                </ul>
+                <ul class="copyright">
+                    <li>&copy; Untitled. All rights reserved.</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+                </ul>
+            </footer>
+
+        </div>
+
+        <!-- Scripts -->
+        <script src="{{url_for('static', filename='js/jquery.min.js')}}"></script>
+        <script src="{{url_for('static', filename='js/jquery.scrolly.min.js')}}"></script>
+        <script src="{{url_for('static', filename='js/jquery.dropotron.min.js')}}"></script>
+        <script src="{{url_for('static', filename='js/jquery.scrollex.min.js')}}"></script>
+        <script src="{{url_for('static', filename='js/browser.min.js')}}"></script>
+        <script src="{{url_for('static', filename='js/breakpoints.min.js')}}"></script>
+        <script src="{{url_for('static', filename='js/util.js')}}"></script>
+        <script src="{{url_for('static', filename='js/main.js')}}"></script>
+
+    </body>
+</html>
