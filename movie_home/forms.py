@@ -19,3 +19,6 @@ class memberupdate_form(FlaskForm):
     gender = SelectField('성별', choices=[('M', '남성'), ('F', '여성')])
     email = EmailField('이메일', validators=[Email(email_validator, '이메일을 확인해주세요')], render_kw={"placeholder": "이메일을 입력하세요(example@chungbuk.ac.kr)"})
     age = StringField('나이', validators=[DataRequired('나이를 확인해주세요')], render_kw={"placeholder": "나이를 입력하세요"})
+
+class search_form(FlaskForm):
+    search = StringField('검색어', validators=[], render_kw={"placeholder": "검색어를 입력하세요"})

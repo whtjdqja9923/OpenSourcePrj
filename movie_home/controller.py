@@ -1,8 +1,9 @@
-from flask import Blueprint, render_template, redirect, session
+from flask import Blueprint, render_template, redirect, session, request, make_response, flash
+from flask_paginate import Pagination, get_page_args
 from flask_wtf import FlaskForm
-from movie_home.forms import signin_form, signup_form, memberupdate_form
+from movie_home.forms import signin_form, signup_form, memberupdate_form, search_form
 
-from movie_home.service import register, login, myinfo, update_member_info
+from movie_home.service import register, login, myinfo, update_member_info, movie_list, user_rating, actor_list
 from movie_home.repo import member
 
 # 블루프린트 생성
@@ -116,3 +117,83 @@ def member_my_favorite():
         return redirect('/')
     
     return render_template('mypage_favorite.html', member_id = session['member_id'])
+
+@mh.route('/movies', methods = ['GET', 'POST'])
+def main_movie_list():
+    #로그인여부 체크
+    m_id = ""
+    if('member_id' in session):
+        m_id = session['member_id']
+    else:
+        flash("로그인이 필요한 서비스입니다.")
+        return redirect('/signin')
+        
+    per_page = 3
+    page, _, offset = get_page_args(per_page=per_page)
+        
+    form = search_form()
+    if form.validate_on_submit():
+        keyword = form.data.get('search')
+        model, total = movie_list(keyword = keyword, m_id=m_id, col_num = 3, per_page = per_page, offset = offset)
+    else:
+        model, total = movie_list(m_id=m_id, col_num = 3, per_page = per_page, offset = offset)
+        
+    return render_template("movie_list.html", member_id=m_id, movie_list=model, form=form, 
+                           pagination = Pagination(
+                               page = page,
+                               total = total,
+                               per_page = per_page,
+                               prev_label = '<<',
+                               next_label = '>>',
+                               format_total = True
+                           ))
+
+@mh.route('/actors', methods = ['GET', 'POST'])
+def main_actor_list():
+    #로그인여부 체크
+    m_id = ""
+    if('member_id' in session):
+        m_id = session['member_id']
+    else:
+        flash("로그인이 필요한 서비스입니다.")
+        return redirect('/signin')
+        
+    per_page = 50
+    page, _, offset = get_page_args(per_page=per_page)
+        
+    form = search_form()
+    if form.validate_on_submit():
+        keyword = form.data.get('search')
+        model, total = actor_list(keyword = keyword, m_id=m_id, col_num = 3, per_page = per_page, offset = offset)
+    else:
+        model, total = actor_list(m_id=m_id, col_num = 3, per_page = per_page, offset = offset)
+        
+    return render_template("actor_list.html", member_id=m_id, people_list=model, form=form, 
+                           pagination = Pagination(
+                               page = page,
+                               total = total,
+                               per_page = per_page,
+                               prev_label = '<<',
+                               next_label = '>>',
+                               format_total = True
+                           ))
+
+@mh.route('/user/rating', methods = ['POST'])
+def rating():
+    #로그인여부 체크
+    m_id = ""
+    if('member_id' in session):
+        m_id = session['member_id']
+    else:
+        flash("로그인이 필요한 서비스입니다.")
+        return redirect('/signin')
+        
+    if(not m_id):
+        return make_response("success", 200)
+    
+    params = request.get_json()
+    params['member_id'] = m_id
+    
+    user_rating(params, type=params['type'])
+    
+    return make_response("success", 200)

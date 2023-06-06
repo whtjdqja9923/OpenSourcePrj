@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<section id="four" class="wrapper style1 special fade-up">
+	<div class="container">
+		<header class="major">
+			<h2>영화추천 프로그램</h2>
+			<p>내가 본 영화들을 평가하고, 취향에 맞는 영화를 추천받으세요</p>
+		</header>
+		<div class="box alt">
+			<div class="row gtr-uniform">
+				<section class="col-4 col-6-medium col-12-xsmall">
+        			<img class="icon_img" src={{url_for('static', filename='images/movies.png')}} alt="" />
+					<h3><a href="/movies">영화 평가하기</a></h3>
+					<p>영화목록에서 영화를 평가하실 수 있습니다.</p>
+				</section>
+				<section class="col-4 col-6-medium col-12-xsmall">
+					<img class="icon_img" src={{url_for('static', filename='images/actors.png')}} alt="" />
+					<h3><a href="/actors">배우보기</a></h3>
+					<p>다양한 영화인을 검색하고 평가하실 수 있습니다.</p>
+				</section>
+				<section class="col-4 col-6-medium col-12-xsmall">
+					<img class="icon_img" src={{url_for('static', filename='images/recommendation.png')}} alt="" />
+					<h3><a href="/movie/recommendation">추천받기</a></h3>
+					<p>내 취향에 맞는 영화를 추천받아 보세요</p>
+				</section>
+				<section class="col-4 col-6-medium col-12-xsmall">
+					<img class="icon_img" src={{url_for('static', filename='images/chatbot.png')}} alt="" />
+					<h3><a href="#">챗봇과 대화하기</a></h3>
+					<p>개발중입니다</p>
+				</section>
+				<section class="col-4 col-6-medium col-12-xsmall">
+					<img class="icon_img" src={{url_for('static', filename='images/synopsis.png')}} alt="" />
+					<h3><a href="#">시놉시스 써보기</a></h3>
+					<p>개발중입니다</p>
+				</section>
+			</div>
+		</div>
+		<footer class="major">
+			<ul class="actions special">
+				<li><a href="/signin" class="button">로그인 하기</a></li>
+			</ul>
+		</footer>
+	</div>
+</section>
+
+{% endblock %}

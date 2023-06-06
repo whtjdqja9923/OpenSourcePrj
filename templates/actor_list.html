@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<!-- Main -->
+	<div id="main" class="wrapper style1">
+		<div class="container">
+			<header class="major">
+				<h2>배우목록</h2>
+			</header>
+
+			<div class="search">
+				<form method="post" action="/actors">
+					{{ form.csrf_token }}
+					{{ form.search() }}
+				</form>
+				<img src="https://s3.ap-northeast-2.amazonaws.com/cdn.wecode.co.kr/icon/search.png">
+			</div>
+			<!-- Content -->
+				<section id="content">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>이름</th>
+                                <th>역할</th>
+                                <th>필모그라피</th>
+                                <th>평가하기</th>
+                            </tr>
+                        </thead>
+					{% if people_list %}
+                        <tbody>
+                        {% for people in people_list %}
+                            <tr class="people_info">
+                                <td class="poeple_code" style="display:none;">{{people['people_code']}}</td>
+                                <td class="people_name" >{{people['people_name']}}</td>
+                                <td>{{people['rep_role_name']}}</td>
+                                <td class="filmo">{% for filmo in people['filmo_compact'] %}
+                                    {{filmo}}{% if filmo %} / {% endif %}
+                                    {% endfor %}
+                                <td class="user_rating">제 점수는요? : 
+                                    <span class="rating">
+                                        ★★★★★
+                                        <span {% if people['user_rating'] %} {{'style=width:' + people['user_rating'] + '%'}} {% endif %}>★★★★★</span>
+                                        <input type="range" oninput="drawStar_people(this)"
+                                        value={% if people['user_rating'] %} {{people['user_rating']}} {% else %} 1 {% endif %}
+                                        step="10" min="0" max={% if people['user_max_rating'] %} {{people['user_max_rating']}} {% else %} 100 {% endif %}>
+                                    </span></td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                        </table>
+					{{ pagination.links | safe }}
+					{% else %}
+						<p>검색 결과가 없습니다.</p>
+					{% endif %}
+
+
+				</section>
+
+		</div>
+	</div>
+
+{% endblock %}
