@@ -133,3 +133,53 @@ def user_rating(data:dict={}, type="movie"):
         else:
             mv.save_rating(d, type="insert")
 
+def actor_list(col_num=3, keyword="", m_id="", per_page=12, offset=0):
+    m_code = "None"
+    if m_id:
+        mem = get_member(member(member_id=m_id))
+        m_code = mem[0].member_code
+    
+    if not keyword:
+        basic = mv.get_people(all=True, off_set=offset, per_page=per_page)
+        l = len(mv.get_people(all=True, off_set=0, per_page=100000000))
+    else:
+        basic = mv.get_people(people_name=keyword, off_set=offset, per_page=per_page)
+        l = len(mv.get_people(people_name=keyword, off_set=0, per_page=100000000))
+        
+    rating = []
+    user_rating = []
+    
+    user = mv.get_rating(code=m_code, type="member")
+    for i in range(len(basic)):
+        rating.append((mv.get_rating(code=basic[i].people_code, type="people")[0] if
+                      mv.get_rating(code=basic[i].people_code, type="people") else mv.movie_rating()))
+        for j in range(len(user)):
+            flag = False
+            if basic[i].people_code == user[j].people_code:
+                user_rating.append(user[j])
+                flag = True
+                break
+        if not flag:
+            user_rating.append(mv.movie_rating())
+        
+    peoples = list(zip(basic, rating, user_rating))
+        
+    p = []
+    for people in peoples:
+        filmo_compact = people[0].filmo_compact.split('|')
+        p.append({
+            "people_code":people[0].people_code,
+            "people_name":people[0].people_name,
+            "rep_role_name":people[0].rep_role_name,
+            "filmo_compact":filmo_compact[:5],
+            "score":people[1].score,
+            "max_score":people[1].max_score,
+            "source":people[1].source,
+            "rating_count":people[1].rating_count,
+            "user_rating":people[2].score,
+            "user_max_rating":people[2].max_score
+        })
+        
+    p = sorted(p, key=(lambda x : x['people_name'] if x['people_name'] is not None else ""), reverse=False)
+        
+    return p, l
