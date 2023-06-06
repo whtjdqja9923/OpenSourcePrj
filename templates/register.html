@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div id="main" class="wrapper style1">
+	<div class="container">
+		<header class="major">
+			<h2>회원가입</h2>
+		</header>
+		<!-- Form -->
+		<section>
+			{% if error_msg or form.errors.items() %}
+				<blockquote>
+					{% for field, errors in form.errors.items() %}
+						{{ form[field].label }}: {{ ','.join(errors) }}
+					{% endfor %}
+					{{error_msg}}
+				</blockquote>
+			{% endif %}
+			<form method="post" action="/signup">
+				{{ form.csrf_token }}
+				<div class="row gtr-uniform gtr-50">
+					<div class="col-12">
+						<h3>아이디</h3>
+					</div>
+					<div class="col-9 col-12-medium">
+						{{ form.member_id() }}
+					</div>
+					<div class="col-3 col-12-medium">
+						<ul class="actions fit">
+							<li><a href="/signup/check" class="button fit primary">중복확인</a></li>
+						</ul>
+					</div>
+					<div class="col-12">
+						<h3>비밀번호</h3>
+					</div>
+					<div class="col-6 col-12-medium">
+						{{ form.password() }}
+					</div>
+					<div class="col-6 col-12-medium">
+						{{ form.password_confirm() }}
+					</div>
+					<div class="col-12">
+						<h3>나이</h3>
+					</div>
+					<div class="col-12">
+						{{ form.age() }}
+					</div>
+					<div class="col-12">
+						<h3>성별</h3>
+					</div>
+					<div class="col-12">
+						{{ form.gender() }}
+					</div>
+					<div class="col-12">
+						<h3>이메일</h3>
+					</div>
+					<div class="col-12">
+						{{ form.email() }}
+					</div>
+					<div class="col-6 col-12-xsmall">
+						<ul class="actions fit">
+							<li><input type="submit" value="제출하기" class="primary" /></li>
+						</ul>
+					</div>
+					<div class="col-6 col-12-xsmall">
+						<ul class="actions fit">
+							<li><input type="reset" value="Reset" /></li>
+						</ul>
+					</div>
+				</div>
+			</form>
+		</section>
+	</div>
+</div>
+
+{% endblock %}
