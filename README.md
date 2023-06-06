@@ -33,6 +33,11 @@ cd OpenSourcePrj
 pip3 install -r requirements.txt
 ```
 
+* Copy & Paste static folder
+```sh
+unpack resources.zip
+paste to /OpensourcePrj
+```
 ---
 
 ### How to use
