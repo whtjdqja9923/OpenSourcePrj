@@ -177,3 +177,23 @@ def main_actor_list():
                                next_label = '>>',
                                format_total = True
                            ))
+
+@mh.route('/user/rating', methods = ['POST'])
+def rating():
+    #로그인여부 체크
+    m_id = ""
+    if('member_id' in session):
+        m_id = session['member_id']
+    else:
+        flash("로그인이 필요한 서비스입니다.")
+        return redirect('/signin')
+        
+    if(not m_id):
+        return make_response("success", 200)
+    
+    params = request.get_json()
+    params['member_id'] = m_id
+    
+    user_rating(params, type=params['type'])
+    
+    return make_response("success", 200)
