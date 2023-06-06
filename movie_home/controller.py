@@ -147,3 +147,33 @@ def main_movie_list():
                                next_label = '>>',
                                format_total = True
                            ))
+
+@mh.route('/actors', methods = ['GET', 'POST'])
+def main_actor_list():
+    #로그인여부 체크
+    m_id = ""
+    if('member_id' in session):
+        m_id = session['member_id']
+    else:
+        flash("로그인이 필요한 서비스입니다.")
+        return redirect('/signin')
+        
+    per_page = 50
+    page, _, offset = get_page_args(per_page=per_page)
+        
+    form = search_form()
+    if form.validate_on_submit():
+        keyword = form.data.get('search')
+        model, total = actor_list(keyword = keyword, m_id=m_id, col_num = 3, per_page = per_page, offset = offset)
+    else:
+        model, total = actor_list(m_id=m_id, col_num = 3, per_page = per_page, offset = offset)
+        
+    return render_template("actor_list.html", member_id=m_id, people_list=model, form=form, 
+                           pagination = Pagination(
+                               page = page,
+                               total = total,
+                               per_page = per_page,
+                               prev_label = '<<',
+                               next_label = '>>',
+                               format_total = True
+                           ))
