@@ -1,22 +1,19 @@
-# weighted rating 계산해서 db 형태로 저장
-# 250위 안에 들기 위한 최소 평점수 일단 500으로 설정
 import sqlite3
 
 db_path = "./share/"
-db_name = "movie_data.db"
+db_name = "database.db"
+
 
 def weighted_rating(movieCd, minVoteCount, meanVoteCount, meanRating):
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
-    query = '''SELECT movieRating, voteCount
-               FROM movies
-               WHERE movieCd = ?
+    query = '''SELECT score, "rating count"
+               FROM rating
+               WHERE "movie code" = ?
     '''
 
-    cursor.execute(query, (movieCd,))
+    cursor.execute(query, movieCd)
     wr = cursor.fetchone()
-    cursor.close()
-    con.close()
 
     if wr is None:
         return None
@@ -30,14 +27,20 @@ def weighted_rating(movieCd, minVoteCount, meanVoteCount, meanRating):
 def calculate_mean_vote_rating():
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
-
-    # voteCount와 movieRating 값의 평균을 계산하는 쿼리
+    
     query = '''SELECT AVG(voteCount) AS mean_vote_count, AVG(movieRating) AS mean_movie_rating
                FROM movies
+               '''
+    
+    query = '''SELECT AVG("rating count") AS mean_vote_count, AVG(score) AS mean_movie_rating
+               FROM rating
     '''
 
     cursor.execute(query)
     result = cursor.fetchone()
+
+    if result is None:
+        return None
 
     mean_vote_count = result[0]
     mean_movie_rating = result[1]
@@ -54,28 +57,40 @@ def calculate_and_save_weighted_ratings():
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
 
-    # 영화 데이터 가져오기
     query = '''SELECT movieCd
                FROM movies
+               '''
+    cursor.execute("PRAGMA table_info(rating)")
+    columns = cursor.fetchall()
+    column_exists = any(column[1] == "weighted rating" for column in columns)
+
+    if not column_exists:
+        alter_query = '''ALTER TABLE rating
+                         ADD COLUMN "weighted rating" FLOAT
+        '''
+        cursor.execute(alter_query)
+        
+    query = '''SELECT "movie code"
+               FROM movie_basic
     '''
     cursor.execute(query)
     movieCds = cursor.fetchall()
-
-    # Weighted rating 계산 및 저장
+    
+    if movieCds is None:
+        return None
+    
     for movieCd in movieCds:
-        weighted_rating_value = weighted_rating(movieCd[0], minVoteCount, meanVoteCount, meanRating)
+        weighted_rating_value = weighted_rating(movieCd, minVoteCount, meanVoteCount, meanRating)
         if weighted_rating_value is not None:
-            update_query = '''UPDATE movies
-                              SET weightedRating = ?
-                              WHERE movieCd = ?
+            update_query = '''UPDATE rating
+                              SET "weighted rating" = ?
+                              WHERE "movie code" = ?
             '''
-            cursor.execute(update_query, (weighted_rating_value, movieCd[0]))
+            cursor.execute(update_query, (weighted_rating_value, movieCd))
 
     con.commit()
     cursor.close()
     con.close()
-
-    print("Weighted ratings calculated and saved.")
 
 
 if __name__ == '__main__':
