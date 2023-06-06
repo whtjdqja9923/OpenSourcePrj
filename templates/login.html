@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div id="main" class="wrapper style1">
+	<div class="container">
+		<header class="major">
+			<h2>로그인</h2>
+		</header>
+		<!-- Form -->
+		<section>
+			{% if error_msg or form.errors.items() %}
+				<blockquote>
+					{% for field, errors in form.errors.items() %}
+						{{ form[field].label }}: {{ ','.join(errors) }}
+					{% endfor %}
+					{{error_msg}}
+				</blockquote>
+			{% endif %}
+			<form method="post" action="/signin">
+				{{ form.csrf_token }}
+				<div class="row gtr-uniform gtr-50">
+					<div class="col-12">
+						<h3>{{ form.member_id.label() }}</h3>
+						{{ form.member_id() }}
+					</div>
+					<div class="col-12">
+						<h3>{{ form.password.label() }}</h3>
+						{{ form.password() }}
+					</div>
+					<div class="col-12">
+						<ul class="actions fit">
+							<li><input type="submit" value="로그인" class="primary" /></li>
+						</ul>
+					</div>
+					<p>회원이 아니세요? <a href="/signup">회원가입 하기</a></p>
+				</div>
+			</form>
+		</section>
+	</div>
+</div>
+
+{% endblock %}
