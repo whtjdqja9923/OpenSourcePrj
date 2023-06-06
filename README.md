@@ -22,16 +22,6 @@
 #### Requirements
 
 * requirements.txt 참고.
----
-beautifulsoup4==4.12.2
-Flask==2.2.3
-Flask-Cors==3.0.10
-Flask-WTF==1.1.1
-email-validator==2.0.0.post2
-requests==2.31.0
-selenium==4.9.1
-flask-paginate==2022.1.8
----
 
 #### How to install
 
