@@ -1,6 +1,7 @@
 import sqlite3
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import CountVectorizer
 
 db_path = "./share/"
 db_name = "database.db"
@@ -19,7 +20,8 @@ def get_movie_data():
                ORDER BY mb."movie code" ASC
     '''
 
-    result = cursor.execute(query).fetchall()
+    cursor.execute(query)
+    result = cursor.fetchall()
     cursor.close()
     con.close()
 
@@ -29,32 +31,25 @@ def calculate_cosine_similarity(movie_data):
     num_movies = len(movie_data)
     
     similarity_matrix = np.zeros((num_movies, num_movies))
+    
+    movie_descriptions = [f"{row['prdt year']} {row['type name']} {row['rep nation name']} {row['rep genre name']} {row['company code']} {row['director num']}"
+                          for row in movie_data]
+    
+    vectorizer = CountVectorizer()
+    feature_vectors = vectorizer.fit_transform(movie_descriptions)
 
     for i in range(num_movies):
-        for j in range(num_movies):
-            if i == j:
-                similarity_matrix[i][j] = 0
-                continue
+        for j in range(i + 1, num_movies):
             
             movie1 = movie_data[i]
             movie2 = movie_data[j]
-
-
-            features1 = [movie1["prdtYear"], movie1["typeNm"], movie1["prdtStatNm"],
-                         movie1["nationAlt"], movie1["genreAlt"], movie1["peopleNm"],
-                         movie1["companyCd"]]
-            features2 = [movie2["prdtYear"], movie2["typeNm"], movie2["prdtStatNm"],
-                         movie2["nationAlt"], movie2["genreAlt"], movie2["peopleNm"],
-                         movie2["companyCd"]]
             
+            features1 = feature_vectors[i].toarray()
+            features2 = feature_vectors[j].toarray()
             
-            features1 = [movie1["prdt year"], movie1["type name"], movie1["rep nation name"],
-                         movie1["rep genre name"], movie1["company code"], movie1["director num"]]
-            features2 = [movie2["prdt year"], movie2["type name"], movie2["rep nation name"],
-                         movie2["rep genre name"], movie2["company code"], movie2["director num"]]
-            
-            similarity = cosine_similarity([features1], [features2])[0][0]
+            similarity = cosine_similarity(features1, features2)[0][0]
             similarity_matrix[i][j] = similarity
+            similarity_matrix[j][i] = similarity
 
     return similarity_matrix
 

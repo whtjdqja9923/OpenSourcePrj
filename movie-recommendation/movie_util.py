@@ -76,9 +76,9 @@ def get_movie_details(movieCd):
     cursor = con.cursor()
     
     query = '''SELECT r."score", mb."open date", d."people name", mb."rep genre name", 
-               CASE WHEN mb."rep nation name" = '한국' THEN mb."movie name" ELSE mb."movie name eng" END AS "movie name",
+               CASE WHEN mb."rep nation name" = '한국' THEN mb."movie name" ELSE mb."movie name eng" END AS "movie title",
                mb."rep nation name", mb."poster img link", c."company name"
-               FROM movie_basic as mb
+               FROM movie_basic AS mb
                LEFT JOIN companys AS c ON mb."movie code" = c."movie code"
                LEFT JOIN directors AS d ON mb."movie code" = d."movie code"
                WHERE "movie code" = ?
@@ -103,18 +103,28 @@ def get_movie_details(movieCd):
         "comNm": comNm
     }
 
-def movieCd_to_movieNmEng(movieCd):
+def movieCd_to_simple_info(movieCd):
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
 
-    query = '''SELECT CASE WHEN "rep nation name" = '한국' THEN "movie name" ELSE "movie name eng" END AS "movie name" 
-    FROM movie_basic WHERE "movie code" = ?
+    query = '''SELECT mb."poster img link", mb."prdt year", mb."rep genre name", md."show time", r.score,
+    CASE WHEN mb."rep nation name" = '한국' THEN mb."movie name" ELSE mb."movie name eng" END AS "movie title" 
+    FROM movie_basic AS mb
+    LEFT JOIN movie_detail AS md ON mb."movie code" = md."movie code"
+    LEFT JOIN rating AS r ON mb."movie code" = r."movie code"
+    WHERE "movie code" = ?
     '''
     cursor.execute(query, movieCd)
     result = cursor.fetchone()
 
-    cursor.close()
-    con.close()
+    posterLink, prdtYear, repGenreNm, showTime, movieRating, movieNm = result
 
-    return result[0]
+    return {
+        "posterLink": posterLink,
+        "prdtYear": prdtYear,
+        "repGenreNm": repGenreNm,
+        "showTime" : showTime,
+        "movieRating": movieRating,
+        "movieNm": movieNm
+    }
 
