@@ -12,13 +12,18 @@ def weighted_rating(movieCd, minVoteCount, meanVoteCount, meanRating):
                WHERE "movie code" = ?
     '''
 
-    cursor.execute(query, movieCd)
+    cursor.execute(query, (movieCd, ))
     wr = cursor.fetchone()
 
     if wr is None:
         return None
 
     movieRating, voteCount = wr
+    movieRating = float(movieRating)
+    voteCount = float(voteCount)
+    minVoteCount = float(minVoteCount)
+    meanRating = float(meanRating)
+    meanVoteCount = float(meanVoteCount)
 
     result = (voteCount / (voteCount + minVoteCount)) * meanRating + (minVoteCount / (voteCount + minVoteCount)) * meanVoteCount
 
@@ -79,7 +84,8 @@ def calculate_and_save_weighted_ratings():
     if movieCds is None:
         return None
     
-    for movieCd in movieCds:
+    for movieCd_tmp in movieCds:
+        movieCd = movieCd_tmp[0]
         weighted_rating_value = weighted_rating(movieCd, minVoteCount, meanVoteCount, meanRating)
         if weighted_rating_value is not None:
             update_query = '''UPDATE rating
