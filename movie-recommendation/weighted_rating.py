@@ -16,64 +16,61 @@ def weighted_rating(movieCd, minVoteCount, meanVoteCount, meanRating):
     wr = cursor.fetchone()
 
     if wr is None:
+        cursor.close()
+        con.close()
         return None
 
     movieRating, voteCount = wr
-    movieRating = float(movieRating)
-    voteCount = float(voteCount)
-    minVoteCount = float(minVoteCount)
-    meanRating = float(meanRating)
-    meanVoteCount = float(meanVoteCount)
 
     result = (voteCount / (voteCount + minVoteCount)) * meanRating + (minVoteCount / (voteCount + minVoteCount)) * meanVoteCount
+    
+    cursor.close()
+    con.close()
 
     return result
 
-def calculate_mean_vote_rating():
+def calculate_elements():
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
     
-    query = '''SELECT AVG(voteCount) AS mean_vote_count, AVG(movieRating) AS mean_movie_rating
-               FROM movies
-               '''
-    
-    query = '''SELECT AVG("rating count") AS mean_vote_count, AVG(score) AS mean_movie_rating
+    query = '''SELECT "rating count"
                FROM rating
-    '''
+               '''
 
     cursor.execute(query)
     result = cursor.fetchone()
 
     if result is None:
+        cursor.close()
+        con.close()
         return None
+    
+    min_vote_count = result.quantie(0.9)
+    
+    query = '''SELECT AVG("rating count") AS mean_vote_count, AVG(source) AS mean_movie_rating
+               FROM rating WHERE "rating count" >= ?
+               '''
 
-    mean_vote_count = result[0]
-    mean_movie_rating = result[1]
+    cursor.execute(query, min_vote_count)
+    result = cursor.fetchone()
+
+    if result is None:
+        cursor.close()
+        con.close()
+        return None
+    
+    mean_vote_count, mean_movie_rating = result
 
     cursor.close()
     con.close()
 
-    return mean_vote_count, mean_movie_rating
+    return min_vote_count, mean_vote_count, mean_movie_rating
 
 def calculate_and_save_weighted_ratings():
-    minVoteCount = 500
-    meanVoteCount, meanRating = calculate_mean_vote_rating()
+    minVoteCount, meanVoteCount, meanRating = calculate_elements()
 
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
-
-    query = '''SELECT movieCd
-               FROM movies
-               '''
-    cursor.execute("PRAGMA table_info(rating)")
-    columns = cursor.fetchall()
-    column_exists = any(column[1] == "weighted rating" for column in columns)
-
-    if not column_exists:
-        alter_query = '''ALTER TABLE rating
-                         ADD COLUMN "weighted rating" FLOAT
-        '''
-        cursor.execute(alter_query)
         
     query = '''SELECT "movie code"
                FROM movie_basic
@@ -82,6 +79,8 @@ def calculate_and_save_weighted_ratings():
     movieCds = cursor.fetchall()
     
     if movieCds is None:
+        cursor.close()
+        con.close()
         return None
     
     for movieCd_tmp in movieCds:
@@ -89,7 +88,7 @@ def calculate_and_save_weighted_ratings():
         weighted_rating_value = weighted_rating(movieCd, minVoteCount, meanVoteCount, meanRating)
         if weighted_rating_value is not None:
             update_query = '''UPDATE rating
-                              SET "weighted rating" = ?
+                              SET score = ?
                               WHERE "movie code" = ?
             '''
             cursor.execute(update_query, (weighted_rating_value, movieCd))
