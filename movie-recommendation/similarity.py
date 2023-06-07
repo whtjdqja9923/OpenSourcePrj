@@ -1,11 +1,9 @@
 import sqlite3
 import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.feature_extraction.text import CountVectorizer
 
 db_path = "./share/"
 db_name = "database.db"
-similarity_matrix_file = "similarity_matrix.npy"
+similarity_matrix_file = "./share/similarity_matrix.npy"
 
 
 def get_movie_data():
@@ -27,27 +25,22 @@ def get_movie_data():
 
     return result
 
-def calculate_cosine_similarity(movie_data):
+
+def calculate_similarity(movie_data):
     num_movies = len(movie_data)
     
     similarity_matrix = np.zeros((num_movies, num_movies))
     
-    movie_descriptions = [f"{row['prdt year']} {row['type name']} {row['rep nation name']} {row['rep genre name']} {row['company code']} {row['director num']}"
-                          for row in movie_data]
-    
-    vectorizer = CountVectorizer()
-    feature_vectors = vectorizer.fit_transform(movie_descriptions)
-
     for i in range(num_movies):
         for j in range(i + 1, num_movies):
             
             movie1 = movie_data[i]
             movie2 = movie_data[j]
-            
-            features1 = feature_vectors[i].toarray()
-            features2 = feature_vectors[j].toarray()
-            
-            similarity = cosine_similarity(features1, features2)[0][0]
+            count = 0.0
+            for i in range(6):
+                if movie1[i] == movie2[i]:
+                    count += 1.0
+            similarity = count / 6.0
             similarity_matrix[i][j] = similarity
             similarity_matrix[j][i] = similarity
 
@@ -57,6 +50,6 @@ def calculate_cosine_similarity(movie_data):
 if __name__ == '__main__':
     movies = get_movie_data()
 
-    similarity_matrix = calculate_cosine_similarity(movies)
+    similarity_matrix = calculate_similarity(movies)
 
     np.save(similarity_matrix_file, similarity_matrix)
