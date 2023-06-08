@@ -2,38 +2,38 @@ import sqlite3
 import numpy as np
 
 db_path = "./share/"
-db_name = "movie_data.db"
+db_name = "database.db"
 
 similarity_matrix = np.load('similarity_matrix.npy')
 
-# ¿µÈ­ÄÚµå(movieCd) -> ¿µÈ­ »ó¼¼Á¤º¸(actors, movieRating, prdtYear, OpenDt, directors[], peopleNmEn, repGenreNm, movieNmEng) ÇÔ¼ö ÀÛ¼º
 
-def get_movie_ratings():
+def get_similar_movieCds(movieCd):
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
-
-    query = '''SELECT movieCd, weightedRating
-               FROM movies
+    
+    query = '''SELECT "movie code"
+    FROM movie_basic
+    ORDER BY "movie code"
     '''
+
     cursor.execute(query)
-    result = cursor.fetchall()
+    movieCds = [row[0] for row in cursor.fetchall()]
+    movieCd_rank = movieCds.index(movieCd)
+
+    top_indices = np.argsort(similarity_matrix[movieCd_rank])[-20:][::-1]
+
+    query = '''SELECT "movie code", "weighted score"
+               FROM rating
+               WHERE "movie code" IN ({})
+               ORDER BY "weighted score" DESC
+               LIMIT 5
+    '''.format(",".join("?" * len(top_indices)))
+    cursor.execute(query, [movieCds[index] for index in top_indices])
+    top_movie_ratings = cursor.fetchall()
+    top_movieCds = [row[0] for row in top_movie_ratings]
 
     cursor.close()
     con.close()
-
-    movie_ratings = {}
-    for movieCd, weightedRating in result:
-        movie_ratings[movieCd] = weightedRating
-
-    return movie_ratings
-
-def get_recommend_movies(movieCd):
-    similar_indices = np.argsort(similarity_matrix, axis=1)[:, ::-1][:, :20]
-
-    movie_ratings = get_movie_ratings()
-
-    top_indices = np.argsort([movie_ratings[movieCd] for movieCd in similar_indices[movieCd]])[::-1][:5]
-    top_movieCds = [similar_indices[movieCd][index] for index in top_indices]
 
     return top_movieCds
 
@@ -41,9 +41,10 @@ def get_top_n_movies_by_weighted_rating(n):
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
 
-    query = '''SELECT movieCd
-               FROM movies
-               ORDER BY weightedRating DESC
+    query = '''SELECT mb."movie code"
+               FROM movie_basic AS mb
+               LEFT JOIN rating AS r ON mb."movie code" = c."movie code"
+               ORDER BY r."weighted score" DESC
                LIMIT ?
     '''
 
@@ -57,14 +58,15 @@ def get_top_n_movies_by_weighted_rating(n):
 
     return movie_codes
 
-def get_top_movies_by_genre(genre, n):
+def get_top_n_movies_by_genre(genre, n):
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
 
-    query = '''SELECT movieCd
-               FROM movies
-               WHERE repGenreNm = ?
-               ORDER BY weightedRating DESC
+    query = '''SELECT mb."movie code"
+               FROM movie_basic AS mb
+               LEFT JOIN rating AS r ON mb."movie code" = c."movie code"
+               WHERE mb."rep genre name" = ?
+               ORDER BY r."weighted score" DESC
                LIMIT ?
     '''
 
@@ -77,3 +79,61 @@ def get_top_movies_by_genre(genre, n):
     movie_codes = [result[0] for result in results]
 
     return movie_codes
+
+def get_movie_details(movieCd):
+    con = sqlite3.connect(db_path + db_name)
+    cursor = con.cursor()
+    
+    query = '''SELECT r."score", mb."open date", d."people name", mb."rep genre name", 
+               CASE WHEN mb."rep nation name" = 'í•œêµ­' THEN mb."movie name" ELSE mb."movie name eng" END AS "movie title",
+               mb."rep nation name", mb."poster img link", c."company name"
+               FROM movie_basic AS mb
+               LEFT JOIN companys AS c ON mb."movie code" = c."movie code"
+               LEFT JOIN directors AS d ON mb."movie code" = d."movie code"
+               WHERE "movie code" = ?
+    '''
+    
+    cursor.execute(query, movieCd)
+    result = cursor.fetchone()
+    
+    cursor.close()
+    con.close()
+    
+    movieRating, OpenDt, director, repGenreNm, movieNm, repNationNm, posterLink, comNm = result
+
+    return {
+        "movieRating": movieRating,
+        "OpenDt": OpenDt,
+        "director": director,
+        "repGenreNm": repGenreNm,
+        "movieNm": movieNm,
+        "repNationNm": repNationNm, 
+        "posterLink": posterLink,
+        "comNm": comNm
+    }
+
+def movieCd_to_simple_info(movieCd):
+    con = sqlite3.connect(db_path + db_name)
+    cursor = con.cursor()
+
+    query = '''SELECT mb."poster img link", mb."prdt year", mb."rep genre name", md."show time", r.score,
+    CASE WHEN mb."rep nation name" = 'í•œêµ­' THEN mb."movie name" ELSE mb."movie name eng" END AS "movie title" 
+    FROM movie_basic AS mb
+    LEFT JOIN movie_detail AS md ON mb."movie code" = md."movie code"
+    LEFT JOIN rating AS r ON mb."movie code" = r."movie code"
+    WHERE "movie code" = ?
+    '''
+    cursor.execute(query, movieCd)
+    result = cursor.fetchone()
+
+    posterLink, prdtYear, repGenreNm, showTime, movieRating, movieNm = result
+
+    return {
+        "posterLink": posterLink,
+        "prdtYear": prdtYear,
+        "repGenreNm": repGenreNm,
+        "showTime" : showTime,
+        "movieRating": movieRating,
+        "movieNm": movieNm
+    }
+
