@@ -10,23 +10,30 @@ similarity_matrix = np.load('similarity_matrix.npy')
 def get_similar_movieCds(movieCd):
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
+    
+    query = '''SELECT "movie code"
+    FROM movie_basic
+    ORDER BY "movie code"
+    '''
 
-    cursor.execute("SELECT `movie code` FROM movie_basic ORDER BY `movie code`")
+    cursor.execute(query)
     movieCds = [row[0] for row in cursor.fetchall()]
     movieCd_rank = movieCds.index(movieCd)
 
     top_indices = np.argsort(similarity_matrix[movieCd_rank])[-20:][::-1]
 
-    top_movieCds = [movieCds[index] for index in top_indices]
-
-    query = "SELECT `movie code`, `weighted rating` FROM movie_basic WHERE `movie code` IN ({})".format(",".join("?" * len(top_movieCds)))
-    cursor.execute(query, top_movieCds)
-    movie_ratings = {row[0]: row[1] for row in cursor.fetchall()}
+    query = '''SELECT "movie code", "weighted score"
+               FROM rating
+               WHERE "movie code" IN ({})
+               ORDER BY "weighted score" DESC
+               LIMIT 5
+    '''.format(",".join("?" * len(top_indices)))
+    cursor.execute(query, [movieCds[index] for index in top_indices])
+    top_movie_ratings = cursor.fetchall()
+    top_movieCds = [row[0] for row in top_movie_ratings]
 
     cursor.close()
     con.close()
-
-    top_movieCds = sorted(movie_ratings.keys(), key=lambda x: movie_ratings[x], reverse=True)[:5]
 
     return top_movieCds
 
@@ -34,9 +41,10 @@ def get_top_n_movies_by_weighted_rating(n):
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
 
-    query = '''SELECT "movie code"
-               FROM movie_basic
-               ORDER BY "weighted rating" DESC
+    query = '''SELECT mb."movie code"
+               FROM movie_basic AS mb
+               LEFT JOIN rating AS r ON mb."movie code" = c."movie code"
+               ORDER BY r."weighted score" DESC
                LIMIT ?
     '''
 
@@ -54,10 +62,11 @@ def get_top_n_movies_by_genre(genre, n):
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
 
-    query = '''SELECT "movie code"
-               FROM movie_basic
-               WHERE "rep genre name" = ?
-               ORDER BY "weighted rating" DESC
+    query = '''SELECT mb."movie code"
+               FROM movie_basic AS mb
+               LEFT JOIN rating AS r ON mb."movie code" = c."movie code"
+               WHERE mb."rep genre name" = ?
+               ORDER BY r."weighted score" DESC
                LIMIT ?
     '''
 
