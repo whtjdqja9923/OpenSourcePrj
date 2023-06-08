@@ -4,7 +4,7 @@ import numpy as np
 db_path = "./share/"
 db_name = "database.db"
 
-similarity_matrix = np.load('similarity_matrix.npy')
+similarity_matrix = np.load('./share/similarity_matrix.npy')
 
 
 def get_similar_movieCds(movieCd):
@@ -26,16 +26,23 @@ def get_similar_movieCds(movieCd):
                FROM rating
                WHERE "movie code" IN ({})
                ORDER BY "weighted score" DESC
-               LIMIT 5
+               LIMIT 3
     '''.format(",".join("?" * len(top_indices)))
     cursor.execute(query, [movieCds[index] for index in top_indices])
     top_movie_ratings = cursor.fetchall()
     top_movieCds = [row[0] for row in top_movie_ratings]
 
-    cursor.close()
-    con.close()
+    posterLinks = []
+    for movieCd in top_movieCds:
+        cursor.execute("SELECT posterLink FROM movies WHERE movieCd = ?", (movieCd,))
+        result = cursor.fetchone()
+        if result:
+            posterLinks.append(result[0])
 
-    return top_movieCds
+        cursor.close()
+        con.close()
+
+    return top_movieCds, posterLinks
 
 def get_top_n_movies_by_weighted_rating(n):
     con = sqlite3.connect(db_path + db_name)
@@ -86,10 +93,11 @@ def get_movie_details(movieCd):
     
     query = '''SELECT r."score", mb."open date", d."people name", mb."rep genre name", 
                CASE WHEN mb."rep nation name" = '한국' THEN mb."movie name" ELSE mb."movie name eng" END AS "movie title",
-               mb."rep nation name", mb."poster img link", c."company name"
+               mb."rep nation name", mb."poster img link", c."company name", md.synopsis
                FROM movie_basic AS mb
                LEFT JOIN companys AS c ON mb."movie code" = c."movie code"
                LEFT JOIN directors AS d ON mb."movie code" = d."movie code"
+               LEFT JOIN movie_detail AS md ON mb."movie code" = md."movie code"
                WHERE "movie code" = ?
     '''
     
@@ -99,7 +107,7 @@ def get_movie_details(movieCd):
     cursor.close()
     con.close()
     
-    movieRating, OpenDt, director, repGenreNm, movieNm, repNationNm, posterLink, comNm = result
+    movieRating, OpenDt, director, repGenreNm, movieNm, repNationNm, posterLink, comNm, synopsis = result
 
     return {
         "movieRating": movieRating,
@@ -109,7 +117,8 @@ def get_movie_details(movieCd):
         "movieNm": movieNm,
         "repNationNm": repNationNm, 
         "posterLink": posterLink,
-        "comNm": comNm
+        "comNm": comNm,
+        "synopsis" : synopsis
     }
 
 def movieCd_to_simple_info(movieCd):
