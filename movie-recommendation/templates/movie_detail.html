@@ -1,17 +1,40 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ movie_title }}</title>
-</head>
-<body>
-    <div style="font-size: 24pt">
-        {{ movie_title }}
-    </div>
-    <div style="font-size: 10pt">
-        {{ movie_rating }}
-    </div>
-</body>
-</html>
+{% extends "layout.html" %}
+
+{% block movieList %}
+
+<!-- Main -->
+<div id="main" class="wrapper style1">
+	<div class="container">
+		<header class="major">
+			<h2>{{movieNm}}</h2>
+		</header>
+
+		<!-- Content -->
+		<section id="content">
+			<span class="image fit main"><img src={{posterLink}} alt={{movieNm}} /></span>
+			<p>{{openDt}}</p>
+			<h3>평점: {{movieRating}}    장르:{{repGenreNm}}</h3>
+			<ul>
+				<li>감독: {{director}}</li>
+				<li>영화 제작사: {{comNm}}</li>
+				<li>국가: {{repNationNm}}</li>
+			</ul>
+			<p>{{synopsis}}</p>
+		</section>
+
+		<section>
+			<h3>관련영화</h3>
+			<div class="box alt">
+				<div class="row gtr-50 gtr-uniform">
+					<div class="col-4 col-6-xsmall"><a href="/movies/{{movieCds[0]}}" class="image fit"><img src={{posterLinks[0]}} alt="" /></a></div>
+					<div class="col-4 col-6-xsmall"><a href="/movies/{{movieCds[1]}}" class="image fit"><img src={{posterLinks[1]}} alt="" /></a></div>
+					<div class="col-4 col-6-xsmall"><a href="/movies/{{movieCds[2]}}" class="image fit"><img src={{posterLinks[2]}} alt="" /></a></div>
+				</div>
+			</div>
+
+		</section>
+
+	</div>
+</div>
+
+{% endblock %}
