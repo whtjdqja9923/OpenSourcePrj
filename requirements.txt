@@ -6,3 +6,5 @@ email-validator==2.0.0.post2
 requests==2.31.0
 selenium==4.9.1
 flask-paginate==2022.1.8
+scikit-learn==1.2.2
+numpy==1.24.3
