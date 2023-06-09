@@ -9,6 +9,9 @@ def create_app():
     # 개별 모듈에서 블루프린트 등록하는 곳
     import movie_home
     app.register_blueprint(movie_home.mh)
+    
+    import movie_recommendation
+    app.register_blueprint(movie_recommendation.mr)
 
     return app
 
