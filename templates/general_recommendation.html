@@ -9,17 +9,18 @@
 			<h2>일반 영화추천</h2>
 			<p>평점기반 영화추천목록입니다.</p>
 		</header>
-		{% for i in range(5) %}
-		<section id=i class="spotlight style2 right">
-			<a href="/recommendation/{{movieCds[i]}}" class="image fit"><img src={{ simpleInfos[i].["posterLink"] }} alt={{ simpleInfos[i].["movieNm"] }} /></a>
+		{% for i in range(10) %}
+		<section id="one" class="spotlight style2 right">
+			<a href="/recommendation/{{movieCds[i]}}" class="image fit"><img src={{ simpleInfos[i]['posterLink'] }} alt={{ simpleInfos[i]['movieNm'] }} /></a>
 			<div class="content">
 				<header>
-					<h2>{{ simpleInfos[i].["movieNm"] }}</h2>
-					<p>[{{ simpleInfos[i].["showTime"] }}] 평점: {{ simpleInfos[i].["movieRating"] }} 장르: {{ simpleInfos[i].["repGenreNm"] }} 개봉연도: {{ simpleInfos[i].["prdtYear"] }}</p>
+					<h2>{{ simpleInfos[i]['movieNm'] }}</h2>
+					<p>{{ simpleInfos[i]['showTime'] }}분 / 평점 : {{ simpleInfos[i]['movieRating'] }} / 장르 : {{ simpleInfos[i]['repGenreNm'] }} / 개봉연도 : {{ simpleInfos[i]['prdtYear'] }}</p>
 				</header>
 			</div>
 		</section>
-		</div>
+		{% endfor %}
 	</div>
+</div>
 
 {% endblock %}

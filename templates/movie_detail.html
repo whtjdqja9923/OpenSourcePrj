@@ -6,20 +6,18 @@
 <div id="main" class="wrapper style1">
 	<div class="container">
 		<header class="major">
-			<h2>{{movieNm}}</h2>
+			<h2>{{detailInfo['movieNm']}}</h2>
 		</header>
 
 		<!-- Content -->
 		<section id="content">
-			<span class="image fit main"><img src={{posterLink}} alt={{movieNm}} /></span>
-			<p>{{openDt}}</p>
-			<h3>평점: {{movieRating}}    장르:{{repGenreNm}}</h3>
+			<span class="image fit main"><img src={{detailInfo['posterLink']}} alt={{detailInfo['movieNm']}} /></span>
+			<p>{{detailInfo['openDt']}}</p>
+			<h3>평점 : {{detailInfo['movieRating']}} / 장르 :{{detailInfo['repGenreNm']}}</h3>
 			<ul>
-				<li>감독: {{director}}</li>
-				<li>영화 제작사: {{comNm}}</li>
-				<li>국가: {{repNationNm}}</li>
+				<li>감독 : {{detailInfo['director']}} / 영화 제작사 : {{detailInfo['comNm']}} / 국가 : {{detailInfo['repNationNm']}}</li>
 			</ul>
-			<p>{{synopsis}}</p>
+			<p>{{detailInfo['synopsis']}}</p>
 		</section>
 
 		<section>
