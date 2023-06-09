@@ -4,7 +4,7 @@ import numpy as np
 db_path = "./share/"
 db_name = "database.db"
 
-similarity_matrix = np.load('./share/similarity_matrix.npy')
+similarity_matrix = np.load('share/similarity_matrix.npy')
 
 
 def get_similar_movieCds(movieCd):
@@ -12,7 +12,7 @@ def get_similar_movieCds(movieCd):
     cursor = con.cursor()
     
     query = '''SELECT "movie code"
-    FROM movie_basic
+    FROM movie_detail
     ORDER BY "movie code"
     '''
 
@@ -22,25 +22,28 @@ def get_similar_movieCds(movieCd):
 
     top_indices = np.argsort(similarity_matrix[movieCd_rank])[-20:][::-1]
 
-    query = '''SELECT "movie code", "weighted score"
+    query = '''SELECT "movie code"
                FROM rating
                WHERE "movie code" IN ({})
                ORDER BY "weighted score" DESC
                LIMIT 3
     '''.format(",".join("?" * len(top_indices)))
     cursor.execute(query, [movieCds[index] for index in top_indices])
-    top_movie_ratings = cursor.fetchall()
-    top_movieCds = [row[0] for row in top_movie_ratings]
+    top_movieCds = cursor.fetchall()
 
     posterLinks = []
     for movieCd in top_movieCds:
-        cursor.execute("SELECT posterLink FROM movies WHERE movieCd = ?", (movieCd,))
+        query = '''SELECT "poster img link"
+        FROM movie_basic
+        WHERE "movie code" = ?
+        '''
+        cursor.execute(query, movieCd)
         result = cursor.fetchone()
         if result:
             posterLinks.append(result[0])
 
-        cursor.close()
-        con.close()
+    cursor.close()
+    con.close()
 
     return top_movieCds, posterLinks
 
@@ -50,7 +53,7 @@ def get_top_n_movies_by_weighted_rating(n):
 
     query = '''SELECT mb."movie code"
                FROM movie_basic AS mb
-               LEFT JOIN rating AS r ON mb."movie code" = c."movie code"
+               LEFT JOIN rating AS r ON mb."movie code" = r."movie code"
                ORDER BY r."weighted score" DESC
                LIMIT ?
     '''
@@ -71,7 +74,7 @@ def get_top_n_movies_by_genre(genre, n):
 
     query = '''SELECT mb."movie code"
                FROM movie_basic AS mb
-               LEFT JOIN rating AS r ON mb."movie code" = c."movie code"
+               LEFT JOIN rating AS r ON mb."movie code" = r."movie code"
                WHERE mb."rep genre name" = ?
                ORDER BY r."weighted score" DESC
                LIMIT ?
@@ -97,11 +100,12 @@ def get_movie_details(movieCd):
                FROM movie_basic AS mb
                LEFT JOIN companys AS c ON mb."movie code" = c."movie code"
                LEFT JOIN directors AS d ON mb."movie code" = d."movie code"
+               LEFT JOIN rating AS r ON mb."movie code" = r."movie code"
                LEFT JOIN movie_detail AS md ON mb."movie code" = md."movie code"
-               WHERE "movie code" = ?
+               WHERE mb."movie code" = ?
     '''
     
-    cursor.execute(query, movieCd)
+    cursor.execute(query, (movieCd, ))
     result = cursor.fetchone()
     
     cursor.close()
@@ -130,9 +134,9 @@ def movieCd_to_simple_info(movieCd):
     FROM movie_basic AS mb
     LEFT JOIN movie_detail AS md ON mb."movie code" = md."movie code"
     LEFT JOIN rating AS r ON mb."movie code" = r."movie code"
-    WHERE "movie code" = ?
+    WHERE mb."movie code" = ?
     '''
-    cursor.execute(query, movieCd)
+    cursor.execute(query, (movieCd, ))
     result = cursor.fetchone()
 
     posterLink, prdtYear, repGenreNm, showTime, movieRating, movieNm = result
