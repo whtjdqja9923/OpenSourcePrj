@@ -136,7 +136,7 @@ def calculate_and_save_weighted_ratings():
     con.close()
 
 
-if __name__ == '__main__':
+def update_weighted_rating():
     add_column()
     
     calculate_and_save_weighted_ratings()

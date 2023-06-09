@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block movieList %}
+{% block content %}
 
 <!-- Main -->
 <div id="main" class="wrapper style1">
@@ -10,20 +10,6 @@
 			<p>장르별 영화추천목록입니다.</p>
 		</header>
 
-		<section id="banner">
-			<div class="content">
-				<header>
-					<h2>The future has landed</h2>
-					<p>
-						And there are no hoverboards or flying cars.<br />
-						Just apps. Lots of mother flipping apps.
-					</p>
-				</header>
-				<span class="image"><img src="images/pic01.jpg" alt="" /></span>
-			</div>
-			<a href="#one" class="goto-next scrolly">Next</a>
-		</section>
-
 		<section id="one" class="spotlight style2 right">
 			<span class="image fit main"><img src="images/pic01.jpg" alt="인기 영화추천" /></span>
 			<div class="content">
@@ -32,7 +18,7 @@
 					<p>인기 영화 목록을 보여줍니다.</p>
 				</header>
 				<ul class="actions">
-					<li><a href="/movies/general" class="button">이동</a></li>
+					<li><a href="/recommendation/general" class="button">이동</a></li>
 				</ul>
 			</div>
 		</section>
@@ -44,7 +30,7 @@
 					<h2>장르별 영화추천</h2>
 					<p>장르별 인기 영화 목록을 보여줍니다.</p>
 				</header>
-				<form action="/movies/{{ genre }}">
+				<form action="/recommendation/{{ genre }}">
 					<select name="장르" id="genre">
 						<option value="가족">가족</option>
 						<option value="공연">공연</option>

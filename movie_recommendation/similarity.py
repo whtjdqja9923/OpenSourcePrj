@@ -43,7 +43,7 @@ def calculate_similarity_matrix(movie_synopses):
     return similarity_matrix
 
 
-if __name__ == '__main__':
+def upadate_similarity_matrix():
     movie_synopses = get_movie_synopses()
 
     similarity_matrix = calculate_similarity_matrix(movie_synopses)

@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block movieList %}
+{% block content %}
 
 <!-- Main -->
 <div id="main" class="wrapper style1">
@@ -37,7 +37,7 @@
 		</div>
 		{% for i in range(5) %}
 		<section id="one" class="spotlight style2 right">
-			<a href="/movies/{{movieCds[i]}}" class="image fit"><img src={{ simpleInfos[i].posterLink }} alt={{ simpleInfos[i].movieNm }} /></a>
+			<a href="/recommendation/{{movieCds[i]}}" class="image fit"><img src={{ simpleInfos[i].posterLink }} alt={{ simpleInfos[i].movieNm }} /></a>
 				<div class="content">
 					<header>
 						<h2>{{ simpleInfos[i].movieNm }}</h2>

@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block movieList %}
+{% block content %}
 
 <!-- Main -->
 <div id="main" class="wrapper style1">
@@ -26,9 +26,9 @@
 			<h3>관련영화</h3>
 			<div class="box alt">
 				<div class="row gtr-50 gtr-uniform">
-					<div class="col-4 col-6-xsmall"><a href="/movies/{{movieCds[0]}}" class="image fit"><img src={{posterLinks[0]}} alt="" /></a></div>
-					<div class="col-4 col-6-xsmall"><a href="/movies/{{movieCds[1]}}" class="image fit"><img src={{posterLinks[1]}} alt="" /></a></div>
-					<div class="col-4 col-6-xsmall"><a href="/movies/{{movieCds[2]}}" class="image fit"><img src={{posterLinks[2]}} alt="" /></a></div>
+					<div class="col-4 col-6-xsmall"><a href="/recommendation/{{movieCds[0]}}" class="image fit"><img src={{posterLinks[0]}} alt="" /></a></div>
+					<div class="col-4 col-6-xsmall"><a href="/recommendation/{{movieCds[1]}}" class="image fit"><img src={{posterLinks[1]}} alt="" /></a></div>
+					<div class="col-4 col-6-xsmall"><a href="/recommendation/{{movieCds[2]}}" class="image fit"><img src={{posterLinks[2]}} alt="" /></a></div>
 				</div>
 			</div>
 
