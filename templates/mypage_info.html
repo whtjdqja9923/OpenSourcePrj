@@ -1,0 +1,27 @@
+{% extends "mypage_layout.html" %}
+
+{% block mypage %}
+
+<section id="content">
+        <h3>아이디</h3>
+        <ul><li>
+            <h3>{{ member.member_id }}</h3>
+        </li></ul>
+        
+    <form method="post" action="/member/info">
+        {{ form.csrf_token }}
+        <h3>비밀번호 변경</h3>
+        <p>{{ form.password() }}</p>
+        <h3>성별</h3>
+        <p>{{ form.gender() }}</p>
+        <h3>이메일</h3>
+        <p>{{ form.email() }}</p>
+        <h3>나이</h3>
+        <p>{{ form.age() }}</p>
+        <ul class="actions fit">
+            <li><input type="submit" value="변경하기" class="primary" /></li>
+        </ul>
+    </form>
+</section>
+
+{% endblock %}

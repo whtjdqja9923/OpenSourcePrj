@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<!-- Main -->
+	<div id="main" class="wrapper style1">
+		<div class="container">
+			<header class="major">
+				<h2>영화목록</h2>
+			</header>
+
+			<div class="search">
+				<form method="post" action="/movies">
+					{{ form.csrf_token }}
+					{{ form.search() }}
+				</form>
+				<img src="https://s3.ap-northeast-2.amazonaws.com/cdn.wecode.co.kr/icon/search.png">
+			</div>
+
+			<!-- Content -->
+				<section id="content">
+					{% if movie_list %}
+					{% for row in movie_list %}
+					<div class="row">
+						{% for movie in row %}
+						<div class="col-4 col-6-xsmall">
+							<span class="image fit">
+								<img src={{movie['poster_img_link']}} alt="" />
+							</span>
+							<span class="movie_info">
+								<p class="movie_code">{{movie['movie_code']}}</p>
+								<p class="movie_name">{{movie['movie_name']}}</p>
+								<p class="info">{{movie['prdt_year']}} / {{movie['rep_genre_name']}} / {{movie['show_time']}}</p>
+								<p class="info">평점 : {{movie['score']}}/{{movie['max_score']}}({{movie['source']}}, {{movie['rating_count']}}명)</p>
+							</span>
+							<span class="user_rating">
+								<p>
+									제 점수는요? : 
+									<span class="rating">
+										★★★★★
+										<span {% if movie['user_rating'] %} {{'style=width:' + movie['user_rating'] + '%'}} {% endif %}>★★★★★</span>
+										<input type="range" oninput="drawStar(this)"
+										value={% if movie['user_rating'] %} {{movie['user_rating']}} {% else %} 1 {% endif %}
+										 step="10" min="0" max={% if movie['user_max_rating'] %} {{movie['user_max_rating']}} {% else %} 100 {% endif %}>
+									</span>
+								</p>
+							</span>
+						</div>
+						{% endfor %}
+					</div>
+					<br>
+					{% endfor %}
+					{{ pagination.links | safe }}
+					{% else %}
+						<p>검색 결과가 없습니다.</p>
+					{% endif %}
+
+
+				</section>
+
+		</div>
+	</div>
+
+{% endblock %}
