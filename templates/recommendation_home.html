@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<!-- Main -->
+<div id="main" class="wrapper style1">
+	<div class="container">
+		<header class="major">
+			<h2>장르별 영화추천</h2>
+			<p>장르별 영화추천목록입니다.</p>
+		</header>
+
+		<section id="one" class="spotlight style2 right">
+			<span class="image fit main"><img src="images/pic01.jpg" alt="인기 영화추천" /></span>
+			<div class="content">
+				<header>
+					<h2>인기 영화추천</h2>
+					<p>인기 영화 목록을 보여줍니다.</p>
+				</header>
+				<ul class="actions">
+					<li><a href="/recommendation/general" class="button">이동</a></li>
+				</ul>
+			</div>
+		</section>
+
+		<section id="one" class="spotlight style2 right">
+			<span class="image fit main"><img src="images/pic02.jpg" alt="장르별 영화추천" /></span>
+			<div class="content">
+				<header>
+					<h2>장르별 영화추천</h2>
+					<p>장르별 인기 영화 목록을 보여줍니다.</p>
+				</header>
+				<ul class="actions">
+					<li><a href="/recommendation/genre/가족" class="button small">가족</a></li>
+					<li><a href="/recommendation/genre/공연" class="button small">공연</a></li>
+					<li><a href="/recommendation/genre/공포(호러)" class="button small">공포(호러)</a></li>
+					<li><a href="/recommendation/genre/다큐멘터리" class="button small">다큐멘터리</a></li>
+					<li><a href="/recommendation/genre/드라마" class="button small">드라마</a></li>
+					<li><a href="/recommendation/genre/멜로" class="button small">멜로/로맨스</a></li>
+					<li><a href="/recommendation/genre/뮤지컬" class="button small">뮤지컬</a></li>
+					<li><a href="/recommendation/genre/미스터리" class="button small">미스터리</a></li>
+					<li><a href="/recommendation/genre/범죄" class="button small">범죄</a></li>
+					<li><a href="/recommendation/genre/사극" class="button small">사극</a></li>
+					<li><a href="/recommendation/genre/서부극(웨스턴)" class="button small">서부극(웨스턴)</a></li>
+					<li><a href="/recommendation/genre/스릴러" class="button small">스릴러</a></li>
+					<li><a href="/recommendation/genre/애니메이션" class="button small">애니메이션</a></li>
+					<li><a href="/recommendation/genre/액션" class="button small">액션</a></li>
+					<li><a href="/recommendation/genre/어드벤처" class="button small">어드벤처</a></li>
+					<li><a href="/recommendation/genre/전쟁" class="button small">전쟁</a></li>
+					<li><a href="/recommendation/genre/코미디" class="button small">코미디</a></li>
+					<li><a href="/recommendation/genre/판타지" class="button small">판타지</a></li>
+					<li><a href="/recommendation/genre/SF" class="button small">SF</a></li>
+					<li><a href="/recommendation/genre/기타" class="button small">기타</a></li>
+				</ul>
+
+			</div>
+		</section>
+	</div>
+</div>
+{% endblock %}
