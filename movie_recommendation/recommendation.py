@@ -18,8 +18,7 @@ def general_recommendation():
 
 @mr.route('/genre/<string:genre>')
 def genre_recommendation(genre):
-    if genre == '¸á·Î':
-        genre = '¸á·Î/·Î¸Ç½º'
+    genre = genre.replace("+", "/")
         
     movieCds = get_top_n_movies_by_genre(genre, 10)
     simpleInfos = [movieCd_to_simple_info(movieCd) for movieCd in movieCds]
@@ -29,7 +28,7 @@ def genre_recommendation(genre):
 @mr.route('/<string:movieCd>')
 def movie_detail(movieCd):
     detailInfo = get_movie_details(movieCd)
-
+    
     movieCds, posterLinks = get_similar_movieCds(movieCd)
 
     return render_template('movie_detail.html', detailInfo=detailInfo, movieCds=movieCds, posterLinks=posterLinks)
