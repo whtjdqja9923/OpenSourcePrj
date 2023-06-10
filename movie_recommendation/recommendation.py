@@ -18,8 +18,8 @@ def general_recommendation():
 
 @mr.route('/genre/<string:genre>')
 def genre_recommendation(genre):
-    if genre == '¸á·Î':
-        genre = '¸á·Î/·Î¸Ç½º'
+    if genre == 'ë©œë¡œ':
+        genre = 'ë©œë¡œ/ë¡œë§¨ìŠ¤'
         
     movieCds = get_top_n_movies_by_genre(genre, 10)
     simpleInfos = [movieCd_to_simple_info(movieCd) for movieCd in movieCds]
