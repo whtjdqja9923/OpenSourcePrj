@@ -4,7 +4,7 @@ import numpy as np
 db_path = "./share/"
 db_name = "database.db"
 
-similarity_matrix = np.load('share/similarity_matrix.npy')
+similarity_matrix = np.load('./share/similarity_matrix.npy')
 
 
 def get_similar_movieCds(movieCd):
@@ -30,6 +30,7 @@ def get_similar_movieCds(movieCd):
     '''.format(",".join("?" * len(top_indices)))
     cursor.execute(query, [movieCds[index] for index in top_indices])
     top_movieCds = cursor.fetchall()
+    top_movieCds = [movieCd[0] for movieCd in top_movieCds]
 
     posterLinks = []
     for movieCd in top_movieCds:
@@ -37,7 +38,7 @@ def get_similar_movieCds(movieCd):
         FROM movie_basic
         WHERE "movie code" = ?
         '''
-        cursor.execute(query, movieCd)
+        cursor.execute(query, (movieCd, ))
         result = cursor.fetchone()
         if result:
             posterLinks.append(result[0])
@@ -94,8 +95,7 @@ def get_movie_details(movieCd):
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
     
-    query = '''SELECT r."score", mb."open date", d."people name", mb."rep genre name", 
-               CASE WHEN mb."rep nation name" = '한국' THEN mb."movie name" ELSE mb."movie name eng" END AS "movie title",
+    query = '''SELECT r."score", mb."open date", d."people name", mb."rep genre name", mb."movie name",
                mb."rep nation name", mb."poster img link", c."company name", md.synopsis
                FROM movie_basic AS mb
                LEFT JOIN companys AS c ON mb."movie code" = c."movie code"
@@ -111,11 +111,11 @@ def get_movie_details(movieCd):
     cursor.close()
     con.close()
     
-    movieRating, OpenDt, director, repGenreNm, movieNm, repNationNm, posterLink, comNm, synopsis = result
-
+    movieRating, openDt, director, repGenreNm, movieNm, repNationNm, posterLink, comNm, synopsis = result
+        
     return {
         "movieRating": movieRating,
-        "OpenDt": OpenDt,
+        "openDt": openDt,
         "director": director,
         "repGenreNm": repGenreNm,
         "movieNm": movieNm,
