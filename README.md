@@ -54,13 +54,14 @@ TODO
 * v.0.6.0 : 영화보기 기능 완성
 * v.0.7.0 : 배우보기 기능 완성
 * v.0.8.0 : 평점주기 기능 완성
+* v.1.0.0 : 영화추천 기능 완성
 
 ---
 
 ### Contacts
 
-whtjdqja9923@naver.com
-overline3021@gmail.com
+* whtjdqja9923@naver.com
+* overline3021@gmail.com
 
 ---
 
