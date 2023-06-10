@@ -129,8 +129,7 @@ def movieCd_to_simple_info(movieCd):
     con = sqlite3.connect(db_path + db_name)
     cursor = con.cursor()
 
-    query = '''SELECT mb."poster img link", mb."prdt year", mb."rep genre name", md."show time", r.score,
-    CASE WHEN mb."rep nation name" = '한국' THEN mb."movie name" ELSE mb."movie name eng" END AS "movie title" 
+    query = '''SELECT mb."poster img link", mb."prdt year", mb."rep genre name", md."show time", r.score, mb."movie name"
     FROM movie_basic AS mb
     LEFT JOIN movie_detail AS md ON mb."movie code" = md."movie code"
     LEFT JOIN rating AS r ON mb."movie code" = r."movie code"
